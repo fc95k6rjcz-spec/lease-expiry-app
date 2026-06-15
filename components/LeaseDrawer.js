@@ -55,6 +55,8 @@ export default function LeaseDrawer({ lease, buildings, tenants, onClose, onChan
           <dd>{inc}</dd>
           <dt>Next review</dt>
           <dd>{dfmt(x.next_review_date)}{x.review_type ? ' · ' + x.review_type : ''}</dd>
+          <dt>Mid-term review</dt>
+          <dd>{x.has_mid_term_review ? dfmt(x.mid_term_review_date) : 'No'}</dd>
           <dt>Right to break</dt>
           <dd>{x.has_break_right ? 'Yes · ' + dfmt(x.break_date) : 'No'}</dd>
           <dt>Option to renew</dt>

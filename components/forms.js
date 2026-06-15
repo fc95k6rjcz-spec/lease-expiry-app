@@ -42,7 +42,8 @@ export function LeaseForm({ initial, buildings, tenants, onClose, onSaved }) {
     building_id: '', tenant_id: '', new_building: '', new_building_addr: '', new_tenant: '',
     levels: '', suite: '', size_sqm: '', rent_per_annum: '', rent_per_sqm: '',
     annual_increase_type: 'Fixed %', annual_increase_value: '', commencement_date: '', expiry_date: '',
-    next_review_date: '', has_break_right: false, break_date: '', has_renewal_option: false,
+    next_review_date: '', has_mid_term_review: false, mid_term_review_date: '',
+    has_break_right: false, break_date: '', has_renewal_option: false,
     option_terms: '', status: 'Active', notes: '', ...(initial || {}),
   });
   const [busy, setBusy] = useState(false);
@@ -72,7 +73,9 @@ export function LeaseForm({ initial, buildings, tenants, onClose, onSaved }) {
         rent_per_annum: numOrNull(v.rent_per_annum), rent_per_sqm: numOrNull(v.rent_per_sqm),
         annual_increase_type: v.annual_increase_type, annual_increase_value: numOrNull(v.annual_increase_value),
         commencement_date: strOrNull(v.commencement_date), expiry_date: strOrNull(v.expiry_date),
-        next_review_date: strOrNull(v.next_review_date), has_break_right: !!v.has_break_right,
+        next_review_date: strOrNull(v.next_review_date),
+        has_mid_term_review: !!v.has_mid_term_review, mid_term_review_date: strOrNull(v.mid_term_review_date),
+        has_break_right: !!v.has_break_right,
         break_date: strOrNull(v.break_date), has_renewal_option: !!v.has_renewal_option,
         option_terms: strOrNull(v.option_terms), status: v.status, notes: strOrNull(v.notes),
       };
@@ -133,6 +136,12 @@ export function LeaseForm({ initial, buildings, tenants, onClose, onSaved }) {
         <Field label="Commencement"><input type="date" value={v.commencement_date || ''} onChange={set('commencement_date')} /></Field>
         <Field label="Expiry"><input type="date" value={v.expiry_date || ''} onChange={set('expiry_date')} /></Field>
         <Field label="Next review"><input type="date" value={v.next_review_date || ''} onChange={set('next_review_date')} /></Field>
+        <Field label="Mid-term market review?">
+          <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontWeight: 500 }}>
+            <input type="checkbox" style={{ width: 'auto' }} checked={!!v.has_mid_term_review} onChange={set('has_mid_term_review')} /> yes
+          </label>
+        </Field>
+        <Field label="Mid-term review date"><input type="date" value={v.mid_term_review_date || ''} onChange={set('mid_term_review_date')} /></Field>
         <Field label="Right to break?">
           <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontWeight: 500 }}>
             <input type="checkbox" style={{ width: 'auto' }} checked={!!v.has_break_right} onChange={set('has_break_right')} /> yes
