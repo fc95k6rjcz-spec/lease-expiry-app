@@ -44,8 +44,9 @@ export default function LoginPage() {
   return (
     <div className="authwrap">
       <form className="authcard" onSubmit={submit}>
-        <h1>LeaseExpiry</h1>
-        <p className="s">Sydney CBD lease diary &amp; tenant CRM</p>
+        <div className="brandmark">BR</div>
+        <h1>BLACK RAIN</h1>
+        <p className="s">Tenant intelligence for commercial leasing</p>
         {!isConfigured && (
           <div className="err">Supabase env vars are missing — set them in Vercel and redeploy.</div>
         )}

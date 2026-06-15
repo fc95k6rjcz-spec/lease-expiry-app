@@ -45,10 +45,10 @@ export default function Shell({ children }) {
     <div className="app">
       <aside className="side">
         <div className="logo">
-          <div className="mark">LX</div>
+          <div className="mark">BR</div>
           <div>
-            <b>LeaseExpiry</b>
-            <span>Diary · CRM · Stack</span>
+            <b>BLACK RAIN</b>
+            <span>Tenant Intelligence</span>
           </div>
         </div>
         <nav className="nav">
