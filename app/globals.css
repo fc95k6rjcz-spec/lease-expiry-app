@@ -30,6 +30,8 @@ button{font-family:inherit}
   box-shadow:0 6px 20px rgba(56,189,248,.35),inset 0 1px 0 rgba(255,255,255,.4)}
 .logo b{color:#fff;font-size:15px;font-weight:800;letter-spacing:2px}
 .logo span{display:block;font-size:10.5px;color:#6b7a92;font-weight:600;letter-spacing:.6px;text-transform:uppercase;margin-top:2px}
+.sidelogo{width:100%;max-width:200px;display:block;margin:0 auto 2px;border-radius:14px}
+.authlogo{width:248px;max-width:100%;display:block;margin:0 auto 18px;border-radius:16px}
 .nav{display:flex;flex-direction:column;gap:2px;margin-top:8px;position:relative}
 .nav a{display:flex;align-items:center;gap:11px;color:#9aa7bd;padding:10px 12px;border-radius:10px;
   font-size:13.5px;font-weight:500;transition:.12s}

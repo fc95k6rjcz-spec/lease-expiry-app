@@ -47,11 +47,7 @@ export default function Shell({ children }) {
     <div className="app">
       <aside className="side">
         <div className="logo">
-          <div className="mark">BR</div>
-          <div>
-            <b>BLACK RAIN</b>
-            <span>Tenant Intelligence</span>
-          </div>
+          <img src="/black-rain.png" alt="Black Rain" className="sidelogo" />
         </div>
         <nav className="nav">
           {NAV.map((n) => (
