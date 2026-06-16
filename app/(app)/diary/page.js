@@ -11,12 +11,43 @@ const COLS = [
   ['tenant', 'Tenant'], ['building', 'Building'], ['unit', 'Level / Suite'],
   ['area', 'm²'], ['rent', 'Rent p.a.'], ['review', 'Next review'], ['expiry', 'Expiry'], ['mte', 'To expiry'],
 ];
+const SIZE_BANDS = [['all', 'Any size'], ['sm', '< 1,000'], ['mid', '1,000–4,999'], ['lg', '5,000+']];
+const EXP_BANDS = [['any', 'Any'], ['le6', '≤6 mo'], ['6to24', '6–24 mo'], ['2to4y', '2–4 yr'], ['3to5y', '3–5 yr'], ['gt5y', '5 yr+']];
+
+function sizeMatch(band, s) {
+  if (band === 'all') return true;
+  if (s == null) return false;
+  if (band === 'sm') return s < 1000;
+  if (band === 'mid') return s >= 1000 && s < 5000;
+  if (band === 'lg') return s >= 5000;
+  return true;
+}
+function expMatch(band, m) {
+  if (band === 'any') return true;
+  if (m == null) return false;
+  if (band === 'le6') return m >= 0 && m <= 6;
+  if (band === '6to24') return m > 6 && m <= 24;
+  if (band === '2to4y') return m >= 24 && m <= 48;
+  if (band === '3to5y') return m >= 36 && m <= 60;
+  if (band === 'gt5y') return m > 60;
+  return true;
+}
+// Smart targets: big leases earlier, small leases later; never <6 months.
+function smartMatch(x) {
+  const s = Number(x.size_sqm), m = x.months_to_expiry;
+  if (!s || m == null || m < 6) return false;
+  if (s >= 5000) return m >= 36 && m <= 60;
+  if (s >= 1000) return m >= 24 && m <= 48;
+  return m >= 12 && m <= 24;
+}
 
 export default function DiaryPage() {
   const { rows, loading, reload } = useLeases();
   const { rows: buildings } = useTable('buildings', { select: 'id,name,street_address' });
   const { rows: tenants } = useTable('tenants', { select: 'id,legal_name' });
-  const [win, setWin] = useState('24');
+  const [size, setSize] = useState('all');
+  const [exp, setExp] = useState('any');
+  const [smart, setSmart] = useState(false);
   const [bf, setBf] = useState('');
   const [q, setQ] = useState('');
   const [year, setYear] = useState(null);
@@ -27,19 +58,19 @@ export default function DiaryPage() {
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search).get('year');
-    if (p) { setYear(+p); setWin('all'); }
+    if (p) { setYear(+p); setExp('any'); setSmart(false); }
   }, []);
 
   const filtered = useMemo(() => {
     let r = rows.filter((x) => {
       if (bf && x.building_name !== bf) return false;
-      if (year) { if (!x.expiry_date || +String(x.expiry_date).slice(0, 4) !== year) return false; }
-      else if (win !== 'all') { const m = x.months_to_expiry; if (m == null || m < 0 || m > +win) return false; }
       if (q) {
         const hay = (x.tenant_name + ' ' + x.building_name + ' ' + (x.levels || '') + ' ' + (x.suite || '')).toLowerCase();
         if (!hay.includes(q.toLowerCase())) return false;
       }
-      return true;
+      if (year) return x.expiry_date && +String(x.expiry_date).slice(0, 4) === year;
+      if (smart) return smartMatch(x);
+      return sizeMatch(size, Number(x.size_sqm)) && expMatch(exp, x.months_to_expiry);
     });
     const val = {
       tenant: (x) => (x.tenant_name || '').toLowerCase(), building: (x) => x.building_name.toLowerCase(),
@@ -49,7 +80,7 @@ export default function DiaryPage() {
     };
     const f = val[sortKey] || val.mte;
     return r.sort((a, b) => { const av = f(a), bv = f(b); return (av > bv ? 1 : av < bv ? -1 : 0) * sortDir; });
-  }, [rows, bf, year, win, q, sortKey, sortDir]);
+  }, [rows, bf, q, year, smart, size, exp, sortKey, sortDir]);
 
   function clickSort(k) {
     if (sortKey === k) setSortDir((d) => -d);
@@ -60,8 +91,7 @@ export default function DiaryPage() {
       { label: 'Tenant', get: (x) => x.tenant_name }, { label: 'Building', get: (x) => x.building_name },
       { label: 'Address', get: (x) => x.address }, { label: 'Level', get: (x) => x.levels },
       { label: 'Suite', get: (x) => x.suite }, { label: 'Area sqm', get: (x) => x.size_sqm },
-      { label: 'Rent pa', get: (x) => rentOf(x) }, { label: 'Rent psqm', get: (x) => x.rent_per_sqm },
-      { label: 'Commenced', get: (x) => x.commencement_date }, { label: 'Expiry', get: (x) => x.expiry_date },
+      { label: 'Rent pa', get: (x) => rentOf(x) }, { label: 'Expiry', get: (x) => x.expiry_date },
       { label: 'Months to expiry', get: (x) => x.months_to_expiry }, { label: 'Status', get: (x) => x.status },
     ];
     downloadCSV('lease-diary.csv', toCSV(filtered, cols));
@@ -69,7 +99,7 @@ export default function DiaryPage() {
 
   return (
     <>
-      <Topbar title="Lease Expiry Diary" sub="Every tenancy, sortable by expiry">
+      <Topbar title="Lease Expiry Diary" sub="Filter by size, expiry window or smart targets">
         <button className="btn" onClick={exportCsv}>Export CSV</button>
         <button className="btn primary" onClick={() => setAdding(true)}>+ Add lease</button>
       </Topbar>
@@ -79,14 +109,29 @@ export default function DiaryPage() {
             <option value="">All buildings</option>
             {[...new Set(rows.map((x) => x.building_name))].sort().map((b) => <option key={b}>{b}</option>)}
           </select>
-          <div className="chipset">
-            {[['6', '≤6 mo'], ['12', '≤12 mo'], ['24', '≤24 mo'], ['all', 'All']].map(([w, lab]) => (
-              <button key={w} className={'chip' + (win === w && !year ? ' on' : '')} onClick={() => { setWin(w); setYear(null); }}>{lab}</button>
-            ))}
-          </div>
-          <input placeholder="filter tenant…" value={q} onChange={(e) => setQ(e.target.value)} />
+          <button
+            className={'btn' + (smart ? ' primary' : '')}
+            onClick={() => { setSmart((s) => !s); setYear(null); }}
+            title="5,000+ m² 3–5yr · 1,000–4,999 m² 2–4yr · <1,000 m² 1–2yr · excludes <6mo"
+          >⚡ Smart targets</button>
+          <input placeholder="search tenant…" value={q} onChange={(e) => setQ(e.target.value)} />
           <span className="count">{filtered.length} tenancies{year ? ` · expiring ${year}` : ''}</span>
         </div>
+        {!smart && !year && (
+          <div className="filters" style={{ marginTop: -6 }}>
+            <div className="chipset">
+              {SIZE_BANDS.map(([k, lab]) => (
+                <button key={k} className={'chip' + (size === k ? ' on' : '')} onClick={() => setSize(k)}>{lab}</button>
+              ))}
+            </div>
+            <div className="chipset">
+              {EXP_BANDS.map(([k, lab]) => (
+                <button key={k} className={'chip' + (exp === k ? ' on' : '')} onClick={() => setExp(k)}>{lab}</button>
+              ))}
+            </div>
+          </div>
+        )}
+        {smart && <div className="banner info" style={{ marginTop: 4 }}>Smart targets: 5,000+ m² expiring in 3–5 yrs · 1,000–4,999 m² in 2–4 yrs · under 1,000 m² in 1–2 yrs. Anything under 6 months is excluded (out of runway).</div>}
         <div className="card">
           <div className="bd">
             {loading ? <Loading /> : (

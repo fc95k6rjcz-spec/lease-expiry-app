@@ -5,13 +5,14 @@ import { Topbar } from '../../components/Shell';
 import { Loading, Pill } from '../../components/ui';
 import LeaseDrawer from '../../components/LeaseDrawer';
 import { useLeases, useTable, buildingSummaries } from '../../lib/data';
-import { fmt, money, money0, expClass, rentOf } from '../../lib/format';
+import { fmt, money, money0, expClass, rentOf, dfmt } from '../../lib/format';
 
 export default function Dashboard() {
   const { rows, loading, reload } = useLeases();
   const { rows: buildings } = useTable('buildings', { select: 'id,name,street_address' });
   const { rows: tenants } = useTable('tenants', { select: 'id,legal_name' });
   const { rows: signals } = useTable('signals', { select: '*' });
+  const { rows: acts } = useTable('interactions', { select: '*' });
   const [sel, setSel] = useState(null);
   const router = useRouter();
 
@@ -133,6 +134,24 @@ export default function Dashboard() {
                   </div>
                 ))}
                 {signals.length === 0 ? <div className="t-sub">No signals yet — add them on the Signals page.</div> : null}
+              </div>
+            </div>
+            <div className="card">
+              <div className="hd"><h2>Follow-ups</h2><span className="tag">upcoming</span></div>
+              <div className="bd pad">
+                {acts
+                  .filter((a) => a.next_action_date && a.next_action_date >= new Date().toISOString().slice(0, 10))
+                  .sort((a, b) => (a.next_action_date < b.next_action_date ? -1 : 1))
+                  .slice(0, 6)
+                  .map((a) => (
+                    <div key={a.id} className="minirow" onClick={() => router.push('/crm?tenant=' + a.tenant_id)}>
+                      <span><b>{(tenants.find((t) => t.id === a.tenant_id) || {}).legal_name || 'Tenant'}</b><br /><span className="t-sub">{a.next_action || a.type}</span></span>
+                      <Pill cls="p-amber">{dfmt(a.next_action_date)}</Pill>
+                    </div>
+                  ))}
+                {acts.filter((a) => a.next_action_date && a.next_action_date >= new Date().toISOString().slice(0, 10)).length === 0 ? (
+                  <div className="t-sub">No upcoming follow-ups. Log an action from a Signal or Tenant.</div>
+                ) : null}
               </div>
             </div>
           </div>

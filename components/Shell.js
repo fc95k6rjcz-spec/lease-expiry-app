@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useAuth, signOut } from '../lib/auth';
-import { useEntitlement, trialDaysLeft } from '../lib/entitlement';
 import { Loading } from './ui';
 
 const NAV = [
@@ -14,7 +13,6 @@ const NAV = [
   { href: '/signals', label: 'Signals', ic: '◆' },
   { href: '/buildings', label: 'Buildings', ic: '▣' },
   { href: '/import', label: 'Import / Export', ic: '⇅' },
-  { href: '/billing', label: 'Billing', ic: '◈' },
 ];
 
 export default function Shell({ children }) {
@@ -69,33 +67,9 @@ export default function Shell({ children }) {
           </button>
         </div>
       </aside>
-      <main className="main">
-        <Entitle pathname={pathname} />
-        {children}
-      </main>
+      <main className="main">{children}</main>
     </div>
   );
-}
-
-function Entitle({ pathname }) {
-  const { loading, entitled, status, trialEndsAt } = useEntitlement();
-  if (loading || entitled || pathname === '/billing') return null;
-  const why = status === 'trialing' ? 'Your trial has ended.' :
-    status === 'past_due' ? 'Your payment is past due.' :
-    status === 'canceled' ? 'Your subscription is canceled.' : 'No active subscription.';
-  return (
-    <div style={{ padding: '12px 28px 0' }}>
-      <div className="banner">
-        {why} <Link href="/billing" style={{ fontWeight: 700 }}>Subscribe to keep full access →</Link>
-      </div>
-    </div>
-  );
-}
-
-export function TrialPill() {
-  const { status, trialEndsAt } = useEntitlement();
-  if (status !== 'trialing') return null;
-  return <span className="pill p-amber">Trial · {trialDaysLeft(trialEndsAt)}d left</span>;
 }
 
 export function Topbar({ title, sub, children }) {

@@ -3,7 +3,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Drawer, Pill } from './ui';
 import { ContactForm, SignalForm, TenantForm } from './forms';
+import LogActionForm from './LogActionForm';
 import { dfmt, money0, sqm, expClass, rentOf } from '../lib/format';
+
+const liUrl = (c, company) =>
+  c.linkedin_url ||
+  'https://www.linkedin.com/search/results/people/?keywords=' + encodeURIComponent((c.full_name || '') + ' ' + (company || ''));
 
 export default function TenantDrawer({ account, onClose, onOpenLease, onChanged }) {
   const tenant_id = account?.id;
@@ -13,15 +18,19 @@ export default function TenantDrawer({ account, onClose, onOpenLease, onChanged 
   const [editContact, setEditContact] = useState(null);
   const [addSignal, setAddSignal] = useState(false);
   const [editTenant, setEditTenant] = useState(false);
+  const [acts, setActs] = useState([]);
+  const [logAction, setLogAction] = useState(false);
 
   const load = useCallback(async () => {
     if (!tenant_id) return;
-    const [{ data: c }, { data: s }] = await Promise.all([
+    const [{ data: c }, { data: s }, { data: a }] = await Promise.all([
       supabase.from('contacts').select('*').eq('tenant_id', tenant_id).order('is_primary', { ascending: false }),
       supabase.from('signals').select('*').eq('tenant_id', tenant_id).order('detected_date', { ascending: false }),
+      supabase.from('interactions').select('*').eq('tenant_id', tenant_id).order('occurred_at', { ascending: false }),
     ]);
     setContacts(c || []);
     setSignals(s || []);
+    setActs(a || []);
   }, [tenant_id]);
 
   useEffect(() => { load(); }, [load]);
@@ -57,7 +66,8 @@ export default function TenantDrawer({ account, onClose, onOpenLease, onChanged 
           contacts.map((c) => (
             <div className="contactbox" key={c.id}>
               <div className="cn">
-                {c.full_name} {c.is_primary ? <Pill cls="p-green">primary</Pill> : null}
+                <a href={liUrl(c, account.name)} target="_blank" rel="noreferrer" title="Open LinkedIn">{c.full_name}</a>
+                {' '}{c.is_primary ? <Pill cls="p-green">primary</Pill> : null}
                 <span style={{ float: 'right', cursor: 'pointer', color: 'var(--muted)' }} onClick={() => setEditContact(c)}>edit</span>
               </div>
               <div className="ct">{c.title || c.role_category}</div>
@@ -78,6 +88,21 @@ export default function TenantDrawer({ account, onClose, onOpenLease, onChanged 
             <div className="cn">{s.signal_type} <span style={{ float: 'right' }}><Pill cls={s.impact === 'High' ? 'p-red' : 'p-amber'}>{s.impact}</Pill></span></div>
             <div className="ct">{s.headline}</div>
             {s.detected_date ? <div className="t-sub">{dfmt(s.detected_date)}{s.source ? ' · ' + s.source : ''}</div> : null}
+          </div>
+        ))}
+
+        <div className="sec-t">
+          Activity &amp; follow-ups
+          <span className="add" onClick={() => setLogAction(true)}>+ Log action</span>
+        </div>
+        {acts.length === 0 ? <div className="t-sub">No activity logged yet.</div> : acts.map((a) => (
+          <div className="contactbox" key={a.id}>
+            <div className="cn">{a.type}
+              {a.next_action_date ? <span style={{ float: 'right' }}><Pill cls="p-amber">follow-up {dfmt(a.next_action_date)}</Pill></span> : null}
+            </div>
+            <div className="ct">{a.summary}</div>
+            {a.next_action ? <div className="t-sub">Next: {a.next_action}</div> : null}
+            <div className="t-sub">{dfmt(a.occurred_at)}</div>
           </div>
         ))}
 
@@ -105,6 +130,7 @@ export default function TenantDrawer({ account, onClose, onOpenLease, onChanged 
       {editContact && <ContactForm initial={editContact} onClose={() => setEditContact(null)} onSaved={load} />}
       {addSignal && <SignalForm tenant_id={tenant_id} onClose={() => setAddSignal(false)} onSaved={() => { load(); onChanged && onChanged(); }} />}
       {editTenant && <TenantForm initial={t.id ? t : { id: tenant_id, legal_name: account.name }} onClose={() => setEditTenant(false)} onSaved={() => { onChanged && onChanged(); }} />}
+      {logAction && <LogActionForm tenant_id={tenant_id} onClose={() => setLogAction(false)} onSaved={load} />}
     </>
   );
 }
