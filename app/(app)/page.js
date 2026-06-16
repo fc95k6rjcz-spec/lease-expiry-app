@@ -6,6 +6,7 @@ import { Loading, Pill } from '../../components/ui';
 import LeaseDrawer from '../../components/LeaseDrawer';
 import { useLeases, useTable, buildingSummaries } from '../../lib/data';
 import { fmt, money, money0, expClass, rentOf, dfmt } from '../../lib/format';
+import { criticalDates } from '../../lib/crm';
 
 export default function Dashboard() {
   const { rows, loading, reload } = useLeases();
@@ -44,6 +45,16 @@ export default function Dashboard() {
     [rows, sigTenants]
   );
   const topB = useMemo(() => buildingSummaries(rows).slice(0, 6), [rows]);
+  const clientItems = useMemo(() => {
+    const items = [];
+    rows.forEach((x) => {
+      if (x.tenant_obj?.relationship === 'Client') {
+        const cd = criticalDates(x)[0];
+        if (cd) items.push({ id: x.id, tenant: x.tenant_name, building: x.building_name, type: cd.type, date: cd.date, tenant_id: x.tenant_id });
+      }
+    });
+    return items.sort((a, b) => (a.date < b.date ? -1 : 1)).slice(0, 10);
+  }, [rows]);
   const maxH = Math.max(1, ...hist.map((h) => h.count));
 
   if (loading) return (<><Topbar title="Dashboard" sub="Portfolio overview" /><div className="wrap"><Loading /></div></>);
@@ -70,6 +81,26 @@ export default function Dashboard() {
             </div>
           ))}
         </div>
+        {clientItems.length > 0 && (
+          <div className="card">
+            <div className="hd"><h2>My Clients — upcoming critical dates</h2><span className="tag">your portfolio · stay proactive</span></div>
+            <div className="bd">
+              <table>
+                <thead><tr><th>Client</th><th>Building</th><th>Critical date</th><th>When</th></tr></thead>
+                <tbody>
+                  {clientItems.map((c) => (
+                    <tr key={c.id} onClick={() => router.push('/crm?tenant=' + c.tenant_id)}>
+                      <td className="t-main">{c.tenant}</td>
+                      <td>{c.building}</td>
+                      <td><Pill cls="p-slate">{c.type}</Pill></td>
+                      <td>{dfmt(c.date)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
         <div className="grid2">
           <div>
             <div className="card">

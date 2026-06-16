@@ -10,6 +10,7 @@ const NAV = [
   { href: '/diary', label: 'Lease Diary', ic: '▤' },
   { href: '/stack', label: 'Stack Plans', ic: '▥' },
   { href: '/crm', label: 'Tenants / CRM', ic: '◍' },
+  { href: '/pipeline', label: 'Pipeline', ic: '◫' },
   { href: '/signals', label: 'Signals', ic: '◆' },
   { href: '/buildings', label: 'Buildings', ic: '▣' },
   { href: '/import', label: 'Import / Export', ic: '⇅' },
