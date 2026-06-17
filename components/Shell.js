@@ -7,19 +7,28 @@ import { displayName } from '../lib/personal';
 import { Loading } from './ui';
 
 const NAV = [
-  { href: '/', label: 'Dashboard', ic: '▦' },
-  { href: '/opportunities', label: 'Opportunities', ic: '★' },
-  { href: '/diary', label: 'Lease Diary', ic: '▤' },
-  { href: '/targets', label: 'Targets', ic: '◎', gold: true },
-  { href: '/stack', label: 'Stack Plans', ic: '▥' },
-  { href: '/crm', label: 'Tenants / CRM', ic: '◍' },
-  { href: '/pipeline', label: 'Pipeline', ic: '◫' },
-  { href: '/analytics', label: 'Analytics', ic: '◷' },
-  { href: '/metrics', label: 'Business Metrics', ic: '◵' },
-  { href: '/signals', label: 'Signals', ic: '◆', gold: true },
-  { href: '/evidence', label: 'Deal Evidence', ic: '◰', gold: true },
-  { href: '/buildings', label: 'Buildings', ic: '▣' },
-  { href: '/import', label: 'Import / Export', ic: '⇅' },
+  { items: [{ href: '/', label: 'Dashboard', ic: '▦' }] },
+  { title: 'Prospect', items: [
+    { href: '/opportunities', label: 'Opportunities', ic: '★' },
+    { href: '/targets', label: 'Targets', ic: '◎', gold: true },
+    { href: '/diary', label: 'Lease Diary', ic: '▤' },
+    { href: '/stack', label: 'Stack Plans', ic: '▥' },
+  ] },
+  { title: 'Manage', items: [
+    { href: '/crm', label: 'Tenants / CRM', ic: '◍' },
+    { href: '/pipeline', label: 'Pipeline', ic: '◫' },
+    { href: '/analytics', label: 'Analytics', ic: '◷' },
+  ] },
+  { title: 'Intel', items: [
+    { href: '/signals', label: 'Signals', ic: '◆', gold: true },
+    { href: '/evidence', label: 'Deal Evidence', ic: '◰', gold: true },
+    { href: '/calculator', label: 'Deal Calculator', ic: '∑' },
+    { href: '/metrics', label: 'Business Metrics', ic: '◵' },
+  ] },
+  { title: 'Data', items: [
+    { href: '/buildings', label: 'Buildings', ic: '▣' },
+    { href: '/import', label: 'Import / Export', ic: '⇅' },
+  ] },
 ];
 
 export default function Shell({ children }) {
@@ -57,10 +66,15 @@ export default function Shell({ children }) {
           <div className="lextag">Signals for expiring leases</div>
         </div>
         <nav className="nav">
-          {NAV.map((n) => (
-            <Link key={n.href} href={n.href} className={(pathname === n.href ? 'on' : '') + (n.gold ? ' gold' : '')}>
-              <span className="ic">{n.ic}</span> {n.label}
-            </Link>
+          {NAV.map((sec, si) => (
+            <div key={si}>
+              {sec.title ? <div className="navsec">{sec.title}</div> : null}
+              {sec.items.map((n) => (
+                <Link key={n.href} href={n.href} className={(pathname === n.href ? 'on' : '') + (n.gold ? ' gold' : '')}>
+                  <span className="ic">{n.ic}</span> {n.label}
+                </Link>
+              ))}
+            </div>
           ))}
         </nav>
         <div className="foot">
