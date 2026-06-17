@@ -44,7 +44,11 @@ export default function LoginPage() {
   return (
     <div className="authwrap">
       <form className="authcard" onSubmit={submit}>
-        <img src="/black-rain.png" alt="Black Rain — Lease Expiry Agent" className="authlogo" />
+        <div className="authlex">
+          <div className="lexmark">LEX</div>
+          <div className="lexsub">Lease Expiry</div>
+          <div className="lextag">Signals for expiring tenant leases</div>
+        </div>
         {!isConfigured && (
           <div className="err">Supabase env vars are missing — set them in Vercel and redeploy.</div>
         )}

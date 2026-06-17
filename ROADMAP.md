@@ -1,4 +1,4 @@
-# Black Rain — roadmap & build ledger
+# LEX — roadmap & build ledger
 
 The information-advantage CRE prospecting engine. This file tracks every request and idea, what's built, and what's left.
 
@@ -12,7 +12,7 @@ The information-advantage CRE prospecting engine. This file tracks every request
 - Stack Plans — searchable, sorted; building data.
 - Dashboard — KPIs, expiry chart, hot prospects, My-Clients critical dates, follow-ups.
 - Data — dedupe/merge, title-casing, off-market columns.
-- Brand — Black Rain dark theme + logo. Deployed on Vercel + Supabase. Stripe removed (single client).
+- Brand — LEX dark theme + logo. Deployed on Vercel + Supabase. Stripe removed (single client).
 
 ## 🔨 Now building (tranche 1 — pure data, no external keys)
 - **Opportunity Score** — one 0–100 number ranking the whole market (timing × size × signal × holdover × option × fragmentation × above-market × contactability), with a "why".
@@ -36,4 +36,4 @@ The information-advantage CRE prospecting engine. This file tracks every request
 - **Field / on-site mode** — phone-first view: snap a board → see who's expiring in *this* building while in the lobby.
 
 ## Big-picture vision
-Move from "here's a list" → **deal-origination engine**: who to call, why now, what to say, what the deal is worth, and where to put them (matchmaking). Black Rain's moat = proprietary off-market data (directory boards) + logic competitors can't buy from a data vendor.
+Move from "here's a list" → **deal-origination engine**: who to call, why now, what to say, what the deal is worth, and where to put them (matchmaking). LEX's moat = proprietary off-market data (directory boards) + logic competitors can't buy from a data vendor.

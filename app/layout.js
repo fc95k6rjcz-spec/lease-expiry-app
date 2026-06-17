@@ -2,7 +2,7 @@ import './globals.css';
 import { AuthProvider } from '../lib/auth';
 
 export const metadata = {
-  title: 'Black Rain — Tenant Intelligence',
+  title: 'LEX — Lease Expiry',
   description: 'Lease expiry diary, tenant CRM, stack plans and expansion signals.',
 };
 

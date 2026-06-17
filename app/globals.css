@@ -32,6 +32,16 @@ button{font-family:inherit}
 .logo span{display:block;font-size:10.5px;color:#6b7a92;font-weight:600;letter-spacing:.6px;text-transform:uppercase;margin-top:2px}
 .sidelogo{width:100%;max-width:200px;display:block;margin:0 auto 2px;border-radius:14px}
 .authlogo{width:248px;max-width:100%;display:block;margin:0 auto 18px;border-radius:16px}
+.lexmark{font-size:32px;font-weight:800;letter-spacing:7px;line-height:1;
+  background:linear-gradient(180deg,#f4f7fb 0%,#aab6cc 55%,#6b7a92 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.lexsub{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-top:7px;
+  background:linear-gradient(180deg,#e3d2a4,#9a8a5f);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lextag{font-size:9px;letter-spacing:1.4px;text-transform:uppercase;color:#5d6b82;margin-top:4px}
+.authlex{text-align:center;margin-bottom:22px}
+.authlex .lexmark{font-size:58px;letter-spacing:13px}
+.authlex .lexsub{font-size:13px;letter-spacing:5px}
+.authlex .lextag{font-size:10px;letter-spacing:2px;margin-top:6px}
 .nav{display:flex;flex-direction:column;gap:2px;margin-top:8px;position:relative}
 .nav a{display:flex;align-items:center;gap:11px;color:#9aa7bd;padding:10px 12px;border-radius:10px;
   font-size:13.5px;font-weight:500;transition:.12s}

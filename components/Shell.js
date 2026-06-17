@@ -48,8 +48,10 @@ export default function Shell({ children }) {
   return (
     <div className="app">
       <aside className="side">
-        <div className="logo">
-          <img src="/black-rain.png" alt="Black Rain" className="sidelogo" />
+        <div className="logo" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 0 }}>
+          <div className="lexmark">LEX</div>
+          <div className="lexsub">Lease Expiry</div>
+          <div className="lextag">Signals for expiring leases</div>
         </div>
         <nav className="nav">
           {NAV.map((n) => (
