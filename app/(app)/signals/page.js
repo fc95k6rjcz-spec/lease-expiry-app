@@ -103,7 +103,17 @@ export default function SignalsPage() {
                     <Pill cls={s.impact === 'High' ? 'p-red' : 'p-amber'}>{s.impact}</Pill>
                     {st !== 'active' ? <span style={{ marginLeft: 8 }}><Pill cls="p-slate">{st}</Pill></span> : null}
                   </div>
-                  {st === 'active' ? <AngleBlock {...signalAngle(s, tenantCtx[s.tenant_id] || {})} compact /> : null}
+                  {st === 'active' ? (
+                    <AngleBlock
+                      {...signalAngle(s, tenantCtx[s.tenant_id] || {})}
+                      compact
+                      aiPayload={{
+                        tenant: tName[s.tenant_id],
+                        signal: { signal_type: s.signal_type, direction: s.direction, headline: s.headline, magnitude: s.magnitude },
+                        lease: tenantCtx[s.tenant_id] || {},
+                      }}
+                    />
+                  ) : null}
                   <div style={{ marginTop: 12, display: 'flex', gap: 14, fontSize: 12.5 }}>
                     {st === 'active' ? (
                       <>
