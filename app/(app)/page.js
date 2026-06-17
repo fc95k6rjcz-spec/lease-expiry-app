@@ -148,7 +148,7 @@ export default function Dashboard() {
               <div className="hd"><h2>Largest buildings</h2></div>
               <div className="bd pad">
                 {topB.map((b) => (
-                  <div key={b.name} className="minirow" onClick={() => router.push('/stack?b=' + encodeURIComponent(b.name))}>
+                  <div key={b.id || b.name} className="minirow" onClick={() => router.push('/stack?b=' + encodeURIComponent(b.name))}>
                     <span><b>{b.name}</b> · {b.leases} tenancies</span>
                     <span>{fmt(Math.round(b.area))} m²</span>
                   </div>

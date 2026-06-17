@@ -71,13 +71,13 @@ export default function TenantDrawer({ account, onClose, onOpenLease, onChanged 
   const rel = td.relationship || null;
   const pipe = td.pipeline || {};
   const tracked = rel === 'Prospect' || rel === 'Client';
-  const leases = account.leases.slice().sort((a, b) => (a.months_to_expiry == null ? 1e9 : a.months_to_expiry) - (b.months_to_expiry == null ? 1e9 : b.months_to_expiry));
+  const leases = (account.leases || []).slice().sort((a, b) => (a.months_to_expiry == null ? 1e9 : a.months_to_expiry) - (b.months_to_expiry == null ? 1e9 : b.months_to_expiry));
 
   return (
     <>
       <Drawer
         title={account.name}
-        subtitle={`${account.leases.length} tenancies · ${Math.round(account.area).toLocaleString()} m² · ${account.buildings.size || account.buildings.length || ''} building(s)`}
+        subtitle={`${(account.leases || []).length} tenancies · ${Math.round(account.area || 0).toLocaleString()} m² · ${account.buildings?.size ?? account.buildings?.length ?? ''} building(s)`}
         onClose={onClose}
       >
         <div className="sec-t">Status</div>

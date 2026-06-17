@@ -8,6 +8,7 @@ import { Loading } from './ui';
 const NAV = [
   { href: '/', label: 'Dashboard', ic: '▦' },
   { href: '/diary', label: 'Lease Diary', ic: '▤' },
+  { href: '/targets', label: 'Targets', ic: '◎' },
   { href: '/stack', label: 'Stack Plans', ic: '▥' },
   { href: '/crm', label: 'Tenants / CRM', ic: '◍' },
   { href: '/pipeline', label: 'Pipeline', ic: '◫' },

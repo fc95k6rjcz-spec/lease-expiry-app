@@ -22,7 +22,7 @@ export default function PipelinePage() {
 
   const byStage = useMemo(() => {
     const m = Object.fromEntries(COLUMNS.map((c) => [c, []]));
-    prospects.forEach((t) => { m[currentStage(t.tenant_obj?.pipeline) || 'Identified'].push(t); });
+    prospects.forEach((t) => { (m[currentStage(t.tenant_obj?.pipeline)] || m.Identified).push(t); });
     return m;
   }, [prospects]);
 

@@ -65,7 +65,7 @@ export default function ImportPage() {
         for (const part of chunk([...newB.values()], 500)) {
           const { data, error } = await supabase.from('buildings').insert(part).select('id,name,street_address');
           if (error) throw error;
-          data.forEach((b) => bMap.set(((b.name || b.street_address) || '').toLowerCase(), b.id));
+          (data || []).forEach((b) => bMap.set(((b.name || b.street_address) || '').toLowerCase(), b.id));
         }
         add(`Inserted ${newB.size} buildings.`);
       } else add('No new buildings.');
@@ -74,7 +74,7 @@ export default function ImportPage() {
         for (const part of chunk([...newT.values()], 500)) {
           const { data, error } = await supabase.from('tenants').insert(part).select('id,legal_name');
           if (error) throw error;
-          data.forEach((t) => tMap.set((t.legal_name || '').toLowerCase(), t.id));
+          (data || []).forEach((t) => tMap.set((t.legal_name || '').toLowerCase(), t.id));
         }
         add(`Inserted ${newT.size} tenants.`);
       } else add('No new tenants.');

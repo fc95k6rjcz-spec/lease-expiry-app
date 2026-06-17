@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Topbar } from '../../../components/Shell';
 import { Loading, Pill } from '../../../components/ui';
 import TenantDrawer from '../../../components/TenantDrawer';
@@ -23,12 +23,14 @@ export default function CrmPage() {
 
   const accounts = useMemo(() => tenantSummaries(rows), [rows]);
   const relOf = (t) => t.tenant_obj?.relationship || null;
+  const opened = useRef(false);
 
   useEffect(() => {
+    if (opened.current) return;
     const p = new URLSearchParams(window.location.search).get('tenant');
     if (p && accounts.length) {
       const a = accounts.find((x) => x.id === p);
-      if (a) setSel(a);
+      if (a) { setSel(a); opened.current = true; }
     }
   }, [accounts]);
 
@@ -72,6 +74,7 @@ export default function CrmPage() {
                 <div key={t.id} className="bcard" onClick={() => setSel(t)}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                     <h3 style={{ margin: 0, flex: 1 }}>{t.name}</h3>
+                    {t.tenant_obj?.off_market ? <Pill cls="p-slate">off-market</Pill> : null}
                     {rel ? <Pill cls={relPill(rel)}>{rel}</Pill> : null}
                   </div>
                   <div className="addr">{rel === 'Prospect' && stage ? 'Stage: ' + stage + ' · ' : ''}{[...t.buildings].slice(0, 2).join(' · ')}{t.buildings.size > 2 ? ' +' + (t.buildings.size - 2) : ''}</div>
