@@ -35,5 +35,22 @@ The information-advantage CRE prospecting engine. This file tracks every request
 - **Precinct map / heat-map** — geocode addresses (geocoding API) → CBD heat-map of expiries, growth, vacancies, clients.
 - **Field / on-site mode** — phone-first view: snap a board → see who's expiring in *this* building while in the lobby.
 
+## Public-data enrichment (candidate sources)
+**Free AU public APIs — build directly, compliant:**
+- ABN / Australian Business Register — legal entity, GST, business names, registration age (data quality + spot subsidiaries).
+- ASX announcements feed — for listed tenants: results, capital raises (funding), M&A, guidance → expansion/contraction signals.
+- AusTender — government contracts awarded → "new contract" signals.
+- IP Australia (trademarks / patents) → new product / expansion signals.
+- NSW Planning Portal / DA tracker — fit-out & works applications → a tenant committing to space or relocating.
+
+**Paid API (key/budget, legit):**
+- Google Places/Maps — discover businesses at an address, website/phone/category, reviews, geocoding (powers the map). Partly answers "discover tenants at a building" digitally.
+- LinkedIn via a compliant provider (Proxycurl / Lusha / Apollo) — headcount, headcount growth, hiring volume, decision-makers, emails/mobiles.
+- Crunchbase / Dealroom — funding rounds, M&A, headcount estimates.
+
+**Avoid direct scraping (ToS/Privacy Act):** LinkedIn direct, Seek/Indeed — use a provider instead.
+
+**Parked (decide later):** in-app directory-board capture via a vision API (phone OCR). Pipeline proven manually (King Street Studios loaded off-market).
+
 ## Big-picture vision
 Move from "here's a list" → **deal-origination engine**: who to call, why now, what to say, what the deal is worth, and where to put them (matchmaking). LEX's moat = proprietary off-market data (directory boards) + logic competitors can't buy from a data vendor.

@@ -141,6 +141,26 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+        <div className="card" style={{ borderColor: 'rgba(56,189,248,.3)' }}>
+          <div className="hd"><h2>Live signals</h2><span className="tag">expansion &amp; contraction triggers</span></div>
+          <div className="bd pad">
+            <div className="sgrid">
+              {signals.filter((s) => (s.status || 'active') === 'active').slice(0, 6).map((s) => {
+                const tn = (tenants.find((t) => t.id === s.tenant_id) || {}).legal_name || 'Tenant';
+                const cl = s.impact === 'High' ? 'high' : s.impact === 'Medium' ? 'med' : '';
+                return (
+                  <div key={s.id} className={'scard ' + cl} onClick={() => router.push('/crm?tenant=' + s.tenant_id)}>
+                    <div className="stype">{s.signal_type} · {s.direction}</div>
+                    <h4>{tn}</h4>
+                    <div className="meta">{s.headline}</div>
+                    <div className="meta" style={{ marginTop: 8 }}><Pill cls={s.impact === 'High' ? 'p-red' : 'p-amber'}>{s.impact}</Pill></div>
+                  </div>
+                );
+              })}
+              {signals.filter((s) => (s.status || 'active') === 'active').length === 0 ? <div className="t-sub">No active signals yet — they appear as the weekly scan finds them.</div> : null}
+            </div>
+          </div>
+        </div>
         {clientItems.length > 0 && (
           <div className="card">
             <div className="hd"><h2>My Clients — upcoming critical dates</h2><span className="tag">your portfolio · stay proactive</span></div>
