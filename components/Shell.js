@@ -9,12 +9,13 @@ const NAV = [
   { href: '/', label: 'Dashboard', ic: '▦' },
   { href: '/opportunities', label: 'Opportunities', ic: '★' },
   { href: '/diary', label: 'Lease Diary', ic: '▤' },
-  { href: '/targets', label: 'Targets', ic: '◎' },
+  { href: '/targets', label: 'Targets', ic: '◎', gold: true },
   { href: '/stack', label: 'Stack Plans', ic: '▥' },
   { href: '/crm', label: 'Tenants / CRM', ic: '◍' },
   { href: '/pipeline', label: 'Pipeline', ic: '◫' },
-  { href: '/signals', label: 'Signals', ic: '◆' },
-  { href: '/evidence', label: 'Deal Evidence', ic: '◰' },
+  { href: '/analytics', label: 'Analytics', ic: '◷' },
+  { href: '/signals', label: 'Signals', ic: '◆', gold: true },
+  { href: '/evidence', label: 'Deal Evidence', ic: '◰', gold: true },
   { href: '/buildings', label: 'Buildings', ic: '▣' },
   { href: '/import', label: 'Import / Export', ic: '⇅' },
 ];
@@ -55,7 +56,7 @@ export default function Shell({ children }) {
         </div>
         <nav className="nav">
           {NAV.map((n) => (
-            <Link key={n.href} href={n.href} className={pathname === n.href ? 'on' : ''}>
+            <Link key={n.href} href={n.href} className={(pathname === n.href ? 'on' : '') + (n.gold ? ' gold' : '')}>
               <span className="ic">{n.ic}</span> {n.label}
             </Link>
           ))}
