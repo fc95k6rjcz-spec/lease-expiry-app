@@ -14,6 +14,7 @@ const NAV = [
   { href: '/crm', label: 'Tenants / CRM', ic: '◍' },
   { href: '/pipeline', label: 'Pipeline', ic: '◫' },
   { href: '/signals', label: 'Signals', ic: '◆' },
+  { href: '/evidence', label: 'Deal Evidence', ic: '◰' },
   { href: '/buildings', label: 'Buildings', ic: '▣' },
   { href: '/import', label: 'Import / Export', ic: '⇅' },
 ];
