@@ -9,6 +9,8 @@ import { fmt, money, money0, expClass, rentOf, dfmt } from '../../lib/format';
 import { criticalDates } from '../../lib/crm';
 import { rentBenchmarks, benchmark, opportunityScore } from '../../lib/score';
 import { fragmentedTargets, multiSiteTargets } from '../../lib/targets';
+import { useAuth } from '../../lib/auth';
+import { displayName, timeGreeting, dailyLine } from '../../lib/personal';
 
 const whyOf = (bd) => {
   const interesting = bd.filter((f) => !['Size / commission', 'Contactable', 'Lease timing'].includes(f.label));
@@ -22,6 +24,8 @@ export default function Dashboard() {
   const { rows: signals } = useTable('signals', { select: '*' });
   const { rows: acts } = useTable('interactions', { select: '*' });
   const { rows: contacts } = useTable('contacts', { select: 'tenant_id' });
+  const { user } = useAuth();
+  const greeting = `${timeGreeting()}, ${displayName(user?.email)}`;
   const [sel, setSel] = useState(null);
   const router = useRouter();
 
@@ -93,7 +97,7 @@ export default function Dashboard() {
   }, [rows, bm, oppSets]);
   const maxH = Math.max(1, ...hist.map((h) => h.count));
 
-  if (loading) return (<><Topbar title="Dashboard" sub="Portfolio overview" /><div className="wrap"><Loading /></div></>);
+  if (loading) return (<><Topbar title={greeting} sub={dailyLine()} /><div className="wrap"><Loading /></div></>);
 
   const cards = [
     ['Tenancies', fmt(kpi.leases), buildings.length + ' buildings', ''],
@@ -106,7 +110,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <Topbar title="Dashboard" sub="Portfolio overview" />
+      <Topbar title={greeting} sub={dailyLine()} />
       <div className="wrap">
         <div className="kpis">
           {cards.map((c) => (

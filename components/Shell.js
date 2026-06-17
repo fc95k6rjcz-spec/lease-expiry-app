@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useAuth, signOut } from '../lib/auth';
+import { displayName } from '../lib/personal';
 import { Loading } from './ui';
 
 const NAV = [
@@ -62,8 +63,8 @@ export default function Shell({ children }) {
           ))}
         </nav>
         <div className="foot">
-          Signed in as<br />
-          {user.email}
+          {displayName(user.email)}’s desk<br />
+          <span style={{ color: '#5d6b82' }}>{user.email}</span>
           <button
             onClick={async () => {
               await signOut();
