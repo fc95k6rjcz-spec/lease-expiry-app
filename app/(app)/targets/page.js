@@ -7,6 +7,7 @@ import LeaseDrawer from '../../../components/LeaseDrawer';
 import { useLeases, tenantSummaries } from '../../../lib/data';
 import { fmt, dfmt } from '../../../lib/format';
 import { reasonsList, fragmentedTargets, multiSiteTargets, reasonPill } from '../../../lib/targets';
+import { reasonAngle } from '../../../lib/angles';
 
 export default function TargetsPage() {
   const { rows, loading, reload } = useLeases();
@@ -47,7 +48,10 @@ export default function TargetsPage() {
                     <td>{r.building}</td>
                     <td>{r.levels || ''}</td>
                     <td className="num">{r.sqm ? Math.round(r.sqm).toLocaleString() : '—'}</td>
-                    <td><Pill cls={reasonPill(r.key)}>{r.reason}</Pill></td>
+                    <td>
+                      <Pill cls={reasonPill(r.key)}>{r.reason}</Pill>
+                      <div style={{ fontSize: 12, color: '#cdd8e8', fontStyle: 'italic', marginTop: 4, maxWidth: 360 }}>&ldquo;{reasonAngle(r.key).opener}&rdquo;</div>
+                    </td>
                     <td>{dfmt(r.expiry)}</td>
                   </tr>
                 ))}

@@ -8,6 +8,8 @@ import LogActionForm from '../../../components/LogActionForm';
 import { supabase } from '../../../lib/supabase';
 import { useLeases, useTable } from '../../../lib/data';
 import { dfmt } from '../../../lib/format';
+import { signalAngle } from '../../../lib/angles';
+import { AngleBlock } from '../../../components/Angle';
 
 export default function SignalsPage() {
   const { rows: leases } = useLeases();
@@ -26,6 +28,21 @@ export default function SignalsPage() {
         if (m[x.tenant_id] == null || x.months_to_expiry < m[x.tenant_id].mte)
           m[x.tenant_id] = { mte: x.months_to_expiry, date: x.expiry_date };
       }
+    });
+    return m;
+  }, [leases]);
+
+  // per-tenant lease context for the "reason to call" angle
+  const tenantCtx = useMemo(() => {
+    const m = {};
+    const today = new Date().toISOString().slice(0, 10);
+    leases.forEach((x) => {
+      if (!x.tenant_id) return;
+      const c = (m[x.tenant_id] = m[x.tenant_id] || { months: null, expiryDate: null, inHoldover: false, optionDue: false });
+      const mte = x.months_to_expiry;
+      if (mte != null && mte >= 0 && (c.months == null || mte < c.months)) { c.months = mte; c.expiryDate = x.expiry_date; }
+      if (String(x.status || '').toLowerCase() === 'holdover' || (x.expiry_date && String(x.expiry_date).slice(0, 10) < today)) c.inHoldover = true;
+      if (x.has_renewal_option && mte != null && mte >= 0 && mte <= 24) c.optionDue = true;
     });
     return m;
   }, [leases]);
@@ -86,6 +103,7 @@ export default function SignalsPage() {
                     <Pill cls={s.impact === 'High' ? 'p-red' : 'p-amber'}>{s.impact}</Pill>
                     {st !== 'active' ? <span style={{ marginLeft: 8 }}><Pill cls="p-slate">{st}</Pill></span> : null}
                   </div>
+                  {st === 'active' ? <AngleBlock {...signalAngle(s, tenantCtx[s.tenant_id] || {})} compact /> : null}
                   <div style={{ marginTop: 12, display: 'flex', gap: 14, fontSize: 12.5 }}>
                     {st === 'active' ? (
                       <>
