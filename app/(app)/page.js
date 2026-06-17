@@ -7,6 +7,13 @@ import LeaseDrawer from '../../components/LeaseDrawer';
 import { useLeases, useTable, buildingSummaries } from '../../lib/data';
 import { fmt, money, money0, expClass, rentOf, dfmt } from '../../lib/format';
 import { criticalDates } from '../../lib/crm';
+import { rentBenchmarks, benchmark, opportunityScore } from '../../lib/score';
+import { fragmentedTargets, multiSiteTargets } from '../../lib/targets';
+
+const whyOf = (bd) => {
+  const interesting = bd.filter((f) => !['Size / commission', 'Contactable', 'Lease timing'].includes(f.label));
+  return (interesting.length ? interesting : bd).slice(0, 2).map((f) => f.label).join(' · ');
+};
 
 export default function Dashboard() {
   const { rows, loading, reload } = useLeases();
@@ -14,6 +21,7 @@ export default function Dashboard() {
   const { rows: tenants } = useTable('tenants', { select: 'id,legal_name' });
   const { rows: signals } = useTable('signals', { select: '*' });
   const { rows: acts } = useTable('interactions', { select: '*' });
+  const { rows: contacts } = useTable('contacts', { select: 'tenant_id' });
   const [sel, setSel] = useState(null);
   const router = useRouter();
 
@@ -55,6 +63,34 @@ export default function Dashboard() {
     });
     return items.sort((a, b) => (a.date < b.date ? -1 : 1)).slice(0, 10);
   }, [rows]);
+
+  const bm = useMemo(() => rentBenchmarks(rows), [rows]);
+  const oppSets = useMemo(() => {
+    const exp = new Set(signals.filter((s) => s.direction === 'Expansion' && (s.status || 'active') === 'active').map((s) => s.tenant_id));
+    const contact = new Set(contacts.map((c) => c.tenant_id));
+    const need = new Set([...fragmentedTargets(rows).map((z) => z.tenant_id), ...multiSiteTargets(rows, true).map((z) => z.tenant_id)]);
+    return { exp, contact, need };
+  }, [rows, signals, contacts]);
+  const topLeads = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const best = {};
+    rows.forEach((x) => {
+      if (!x.tenant_id) return;
+      const mte = x.months_to_expiry;
+      const b = benchmark(x, bm);
+      const ctx = {
+        inHoldover: String(x.status || '').toLowerCase() === 'holdover' || (x.expiry_date && String(x.expiry_date).slice(0, 10) < today),
+        optionDue: x.has_renewal_option && mte != null && mte >= 0 && mte <= 24,
+        hasExpansionSignal: oppSets.exp.has(x.tenant_id),
+        contactable: oppSets.contact.has(x.tenant_id),
+        fragmentedOrMulti: oppSets.need.has(x.tenant_id),
+        benchmarkPct: b ? b.pct : null,
+      };
+      const sc = opportunityScore(x, ctx);
+      if (!best[x.tenant_id] || sc.score > best[x.tenant_id].score) best[x.tenant_id] = { lease: x, ...sc };
+    });
+    return Object.values(best).sort((a, b) => b.score - a.score).slice(0, 5);
+  }, [rows, bm, oppSets]);
   const maxH = Math.max(1, ...hist.map((h) => h.count));
 
   if (loading) return (<><Topbar title="Dashboard" sub="Portfolio overview" /><div className="wrap"><Loading /></div></>);
@@ -80,6 +116,26 @@ export default function Dashboard() {
               <div className="hint">{c[2]}</div>
             </div>
           ))}
+        </div>
+        <div className="card" style={{ borderColor: 'rgba(227,210,164,.35)' }}>
+          <div className="hd"><h2>Today’s top leads</h2><span className="tag" style={{ color: '#e3d2a4' }}>ranked by opportunity · updates as new signals land</span></div>
+          <div className="bd pad">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12 }}>
+              {topLeads.map((r, i) => (
+                <div key={r.lease.tenant_id} onClick={() => router.push('/crm?tenant=' + r.lease.tenant_id)}
+                  style={{ cursor: 'pointer', background: 'linear-gradient(180deg,var(--panel2),var(--panel))', border: '1px solid rgba(227,210,164,.25)', borderRadius: 12, padding: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                    <div style={{ fontSize: 27, fontWeight: 800, color: '#e3d2a4', letterSpacing: '-.5px' }}>{r.score}</div>
+                    <div className="t-sub">#{i + 1}</div>
+                  </div>
+                  <div className="t-main" style={{ marginTop: 4 }}>{r.lease.tenant_name}</div>
+                  <div className="t-sub">{whyOf(r.breakdown)}</div>
+                  <div className="t-sub" style={{ marginTop: 6 }}>{r.lease.building_name}{r.lease.size_sqm ? ' · ' + Math.round(r.lease.size_sqm).toLocaleString() + ' m²' : ''} · exp {dfmt(r.lease.expiry_date)}</div>
+                </div>
+              ))}
+              {topLeads.length === 0 ? <div className="t-sub">Load data to see ranked leads.</div> : null}
+            </div>
+          </div>
         </div>
         {clientItems.length > 0 && (
           <div className="card">
