@@ -31,13 +31,38 @@ export default function ImportPage() {
   async function handleFile(e) {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Guard 1: only accept CSV. Reject Excel/binary before it can pollute the data.
+    const nameOk = /\.csv$/i.test(file.name);
+    if (!nameOk) {
+      e.target.value = '';
+      alert(`That's not a CSV — "${file.name}".\n\nExcel files (.xlsx/.xls) can't be imported directly. In Excel: File → Save As → CSV, then upload that.`);
+      return;
+    }
     setLog([]);
     setBusy(true);
     try {
       const text = await file.text();
+      // Guard 2: binary/Excel sniff — real CSV is printable text.
+      if (/PK/.test(text.slice(0, 8)) || /�/.test(text.slice(0, 2000))) {
+        throw new Error('This file looks like a binary spreadsheet, not a CSV. In Excel, use File → Save As → CSV.');
+      }
       const rows = parseCSV(text);
+      // Guard 3: must look like a CityScope export (recognised columns).
+      const cols = rows.length ? Object.keys(rows[0]) : [];
+      const known = ['Building Name', 'Property Address', 'Tenant Name', 'Lessee Registered', 'Expiry Date', 'Level'];
+      if (!cols.some((c) => known.includes(c))) {
+        throw new Error('No recognised CityScope columns found (e.g. "Building Name", "Tenant Name", "Expiry Date"). This doesn\'t look like a CityScope CSV — nothing imported.');
+      }
       add(`Parsed ${rows.length} rows.`);
       if (!rows.length) throw new Error('No rows found in CSV.');
+      // Guard 4: conscious confirmation — stops accidental / repeat bulk imports.
+      if (!window.confirm(`Import ${rows.length} tenancies from "${file.name}"?\n\nThis ADDS rows (it won't replace existing data). Re-importing the same file will create duplicates — only proceed if this is new data.`)) {
+        add('Cancelled.');
+        setBusy(false);
+        e.target.value = '';
+        return;
+      }
 
       // existing maps (idempotent-ish)
       const [{ data: exB }, { data: exT }] = await Promise.all([
