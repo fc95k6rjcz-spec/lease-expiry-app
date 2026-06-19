@@ -54,60 +54,87 @@ export default function ImportPage() {
       if (!cols.some((c) => known.includes(c))) {
         throw new Error('No recognised CityScope columns found (e.g. "Building Name", "Tenant Name", "Expiry Date"). This doesn\'t look like a CityScope CSV — nothing imported.');
       }
-      add(`Parsed ${rows.length} rows.`);
       if (!rows.length) throw new Error('No rows found in CSV.');
-      // Guard 4: conscious confirmation — stops accidental / repeat bulk imports.
-      if (!window.confirm(`Import ${rows.length} tenancies from "${file.name}"?\n\nThis ADDS rows (it won't replace existing data). Re-importing the same file will create duplicates — only proceed if this is new data.`)) {
-        add('Cancelled.');
-        setBusy(false);
-        e.target.value = '';
-        return;
+      add(`Parsed ${rows.length} rows.`);
+
+      // Load what already exists: buildings, tenants, and a signature of every lease on file.
+      const [{ data: exB }, { data: exT }, { data: exL }] = await Promise.all([
+        supabase.from('buildings').select('id,name,street_address').limit(50000),
+        supabase.from('tenants').select('id,legal_name').limit(50000),
+        supabase.from('leases').select('building_id,suite,levels,expiry_date').limit(100000),
+      ]);
+      const bMap = new Map(), idToBKey = new Map();
+      (exB || []).forEach((b) => {
+        const k = ((b.name || b.street_address) || '').toLowerCase().trim();
+        bMap.set(k, b.id); idToBKey.set(b.id, k);
+      });
+      const tMap = new Map();
+      (exT || []).forEach((t) => tMap.set((t.legal_name || '').toLowerCase().trim(), t.id));
+
+      // A tenancy is uniquely identified by building + suite + levels + expiry.
+      // This survives tenant-name cleanups, so re-importing the same file is a no-op.
+      const sig = (bk, suite, levels, expiry) =>
+        [bk || '', (suite || '').toLowerCase().trim(), (levels || '').toLowerCase().trim(), expiry || ''].join('|');
+      const onFile = new Set();
+      (exL || []).forEach((l) => onFile.add(sig(idToBKey.get(l.building_id) || '', l.suite, l.levels, l.expiry_date)));
+
+      // Decide which rows are genuinely new BEFORE changing anything.
+      const seen = new Set();
+      const planned = [];
+      let dup = 0;
+      for (const r of rows) {
+        const bRaw = pick(r, ['Building Name']) || pick(r, ['Property Address']);
+        const bKey = (bRaw || '').toLowerCase().trim();
+        const k = sig(bKey, pick(r, ['Suite']), pick(r, ['Level']), toDate(pick(r, ['Expiry Date'])));
+        if (onFile.has(k) || seen.has(k)) { dup++; continue; }
+        seen.add(k);
+        planned.push(r);
+      }
+      add(`${planned.length} new tenancies · ${dup} already on file (skipped).`);
+      if (!planned.length) {
+        add('✅ Nothing new — your data already matches this file. No duplicates created.');
+        setBusy(false); e.target.value = ''; return;
       }
 
-      // existing maps (idempotent-ish)
-      const [{ data: exB }, { data: exT }] = await Promise.all([
-        supabase.from('buildings').select('id,name,street_address').limit(10000),
-        supabase.from('tenants').select('id,legal_name').limit(10000),
-      ]);
-      const bMap = new Map();
-      (exB || []).forEach((b) => bMap.set(((b.name || b.street_address) || '').toLowerCase(), b.id));
-      const tMap = new Map();
-      (exT || []).forEach((t) => tMap.set((t.legal_name || '').toLowerCase(), t.id));
+      // Guard 4: conscious confirmation, now showing the real (deduped) impact.
+      if (!window.confirm(`Import ${planned.length} NEW tenancies from "${file.name}"?\n\n${dup} rows are already in LEX and will be skipped, so this won't create duplicates.`)) {
+        add('Cancelled.'); setBusy(false); e.target.value = ''; return;
+      }
 
-      // collect new buildings & tenants
+      // Create only the buildings/tenants the NEW tenancies need.
       const newB = new Map(), newT = new Map();
-      for (const r of rows) {
-        const bname = pick(r, ['Building Name']) || pick(r, ['Property Address']);
-        const baddr = pick(r, ['Property Address']) || bname;
-        const bkey = (bname || '').toLowerCase();
-        if (bname && !bMap.has(bkey) && !newB.has(bkey)) newB.set(bkey, { name: pick(r, ['Building Name']) || null, street_address: baddr, suburb: null, cityscope_ref: pick(r, ['Building Name']) || null });
-        const tname = pick(r, ['Tenant Name']) || pick(r, ['Lessee Registered']);
-        const tkey = (tname || '').toLowerCase();
-        if (tname && !tMap.has(tkey) && !newT.has(tkey)) newT.set(tkey, { legal_name: tname, website: pick(r, ['Internet']) || null });
+      for (const r of planned) {
+        const bRaw = pick(r, ['Building Name']) || pick(r, ['Property Address']);
+        const bKey = (bRaw || '').toLowerCase().trim();
+        if (bRaw && !bMap.has(bKey) && !newB.has(bKey))
+          newB.set(bKey, { name: pick(r, ['Building Name']) || null, street_address: pick(r, ['Property Address']) || bRaw, suburb: pick(r, ['Property Suburb']) || null, cityscope_ref: pick(r, ['Cityscope Reference', 'Building Name']) || null });
+        const tRaw = pick(r, ['Tenant Name']) || pick(r, ['Lessee Registered']);
+        const tKey = (tRaw || '').toLowerCase().trim();
+        if (tRaw && !tMap.has(tKey) && !newT.has(tKey))
+          newT.set(tKey, { legal_name: tRaw, website: pick(r, ['Internet']) || null, source: 'Import' });
       }
 
       if (newB.size) {
         for (const part of chunk([...newB.values()], 500)) {
           const { data, error } = await supabase.from('buildings').insert(part).select('id,name,street_address');
           if (error) throw error;
-          (data || []).forEach((b) => bMap.set(((b.name || b.street_address) || '').toLowerCase(), b.id));
+          (data || []).forEach((b) => bMap.set(((b.name || b.street_address) || '').toLowerCase().trim(), b.id));
         }
-        add(`Inserted ${newB.size} buildings.`);
-      } else add('No new buildings.');
-
+      }
+      add(`Buildings: +${newB.size} new.`);
       if (newT.size) {
         for (const part of chunk([...newT.values()], 500)) {
           const { data, error } = await supabase.from('tenants').insert(part).select('id,legal_name');
           if (error) throw error;
-          (data || []).forEach((t) => tMap.set((t.legal_name || '').toLowerCase(), t.id));
+          (data || []).forEach((t) => tMap.set((t.legal_name || '').toLowerCase().trim(), t.id));
         }
-        add(`Inserted ${newT.size} tenants.`);
-      } else add('No new tenants.');
+      }
+      add(`Tenants: +${newT.size} new.`);
 
-      // build leases
-      const leases = rows.map((r) => {
-        const bname = (pick(r, ['Building Name']) || pick(r, ['Property Address']) || '').toLowerCase();
-        const tname = (pick(r, ['Tenant Name']) || pick(r, ['Lessee Registered']) || '').toLowerCase();
+      // Build leases ONLY for the new tenancies.
+      const leases = planned.map((r) => {
+        const bKey = (pick(r, ['Building Name']) || pick(r, ['Property Address']) || '').toLowerCase().trim();
+        const tKey = (pick(r, ['Tenant Name']) || pick(r, ['Lessee Registered']) || '').toLowerCase().trim();
         const fixed = toNum(pick(r, ['Fixed%*', 'Fixed%']));
         const cpi = toNum(pick(r, ['CPI%*', 'CPI%']));
         let incType = 'Other', incVal = null;
@@ -115,8 +142,8 @@ export default function ImportPage() {
         else if (cpi != null) { incType = 'CPI'; incVal = cpi <= 1 ? Math.round(cpi * 10000) / 100 : cpi; }
         const options = pick(r, ['Options Detail']);
         return {
-          building_id: bMap.get(bname) || null,
-          tenant_id: tMap.get(tname) || null,
+          building_id: bMap.get(bKey) || null,
+          tenant_id: tMap.get(tKey) || null,
           levels: pick(r, ['Level']) || null,
           suite: pick(r, ['Suite']) || null,
           size_sqm: toNum(pick(r, ['Area*', 'Area'])),
@@ -131,7 +158,6 @@ export default function ImportPage() {
           has_renewal_option: !!options,
           option_terms: options || null,
           status: 'Active',
-          cityscope_ref: pick(r, ['Building Name']) ? null : null,
         };
       });
 
@@ -140,9 +166,9 @@ export default function ImportPage() {
         const { error } = await supabase.from('leases').insert(part);
         if (error) throw error;
         inserted += part.length;
-        add(`Inserted ${inserted}/${leases.length} leases…`);
+        add(`Inserted ${inserted}/${leases.length} new tenancies…`);
       }
-      add(`✅ Done. Imported ${inserted} tenancies.`);
+      add(`✅ Done. Added ${inserted} new tenancies (${dup} duplicates skipped).`);
     } catch (e) {
       add('❌ ' + (e.message || e));
     } finally {
@@ -165,10 +191,10 @@ export default function ImportPage() {
           <div className="hd"><h2>Import CityScope (CSV)</h2></div>
           <div className="bd pad">
             <p style={{ marginTop: 0, color: 'var(--muted)', fontSize: 13 }}>
-              In CityScope, export your data and save it as <b>CSV</b> (or open the .xlsx and Save As CSV). The importer
-              maps the standard CityScope columns, creates any missing buildings and tenants, then loads each tenancy.
-              It reuses buildings/tenants that already exist, so re-importing won&apos;t duplicate them (it will add the
-              lease rows again — clear the <code>leases</code> table first if you&apos;re reloading the same file).
+              In CityScope, export your data and save it as <b>CSV</b> (Excel files must be saved as CSV first). The
+              importer matches each tenancy by building, suite, level and expiry, so it only adds what&apos;s genuinely
+              new — <b>re-importing the same file is safe and won&apos;t create duplicates</b>. It tells you how many new
+              tenancies it found and asks you to confirm before loading them.
             </p>
             <input type="file" accept=".csv,text/csv" onChange={handleFile} disabled={busy} />
             {log.length > 0 && (
