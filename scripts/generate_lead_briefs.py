@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""
+r"""
 generate_lead_briefs.py  —  LEX overnight AI desk (runs on the 5090).
 
 Reads your hottest LEX leads from Supabase, uses a LOCAL Ollama model on the
