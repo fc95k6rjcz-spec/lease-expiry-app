@@ -224,18 +224,19 @@ def main():
         if (s.get("status") or "active") == "active" and s.get("tenant_id"):
             sig_by_tenant.setdefault(s["tenant_id"], s)
 
-    # leases with embedded building + tenant
-    rows = (
-        sb.table("leases")
-        .select("id,tenant_id,size_sqm,rent_per_annum,expiry_date,has_renewal_option,"
-                "levels,suite,building:buildings(name,street_address,market),"
-                "tenant:tenants(id,legal_name,industry,business_summary,relationship)")
-        .not_.is_("tenant_id", "null")
-        .limit(5000)
-        .execute()
-        .data
-        or []
-    )
+    # leases with embedded building + tenant — paginate past the 1000-row API cap
+    sel = ("id,tenant_id,size_sqm,rent_per_annum,expiry_date,has_renewal_option,"
+           "levels,suite,building:buildings(name,street_address,market),"
+           "tenant:tenants(id,legal_name,industry,business_summary,relationship)")
+    rows, _start, _step = [], 0, 1000
+    while True:
+        chunk = (sb.table("leases").select(sel).not_.is_("tenant_id", "null")
+                 .range(_start, _start + _step - 1).execute().data or [])
+        rows += chunk
+        if len(chunk) < _step:
+            break
+        _start += _step
+    print(f"Loaded {len(rows)} leases across all markets.")
 
     # collapse to one hottest lease per tenant
     best = {}
