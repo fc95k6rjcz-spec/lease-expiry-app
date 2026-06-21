@@ -72,6 +72,7 @@ export default function Dashboard() {
     rows.forEach((x) => {
       if (!x.tenant_id) return;
       if (['moved', 'done'].includes(x.tenant_obj?.prospect_status)) return; // already signed/relocated — don't pitch
+      if (x.tenant_obj?.verified_at) return; // shown in the Verified panel above
       const mte = x.months_to_expiry;
       const b = benchmark(x, bm);
       const ctx = {
@@ -87,6 +88,19 @@ export default function Dashboard() {
     });
     return Object.values(best).sort((a, b) => b.score - a.score).slice(0, 6);
   }, [rows, bm, oppSets]);
+
+  // Hand-verified leads (cross-checked against current news) — the headline to work today.
+  const verifiedLeads = useMemo(() => {
+    const best = {};
+    rows.forEach((x) => {
+      if (!x.tenant_id || !x.tenant_obj?.verified_at) return;
+      if (['moved', 'done'].includes(x.tenant_obj?.prospect_status)) return;
+      const mte = x.months_to_expiry == null ? 1e9 : x.months_to_expiry;
+      const cur = best[x.tenant_id];
+      if (!cur || mte < (cur.months_to_expiry == null ? 1e9 : cur.months_to_expiry)) best[x.tenant_id] = x;
+    });
+    return Object.values(best).sort((a, b) => (Number(b.size_sqm) || 0) - (Number(a.size_sqm) || 0));
+  }, [rows]);
 
   const clientItems = useMemo(() => {
     const items = [];
@@ -134,6 +148,33 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
+
+        {verifiedLeads.length > 0 && (
+          <div className="card" style={{ borderColor: 'rgba(52,211,153,.45)', marginBottom: 16 }}>
+            <div className="hd">
+              <h2>✓ Verified — investigate today</h2>
+              <span className="tag" style={{ color: 'var(--green)' }}>cross-checked against current news · {dfmt(verifiedLeads[0].tenant_obj?.verified_at)}</span>
+            </div>
+            <div className="bd pad">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(330px,1fr))', gap: 14 }}>
+                {verifiedLeads.map((x) => (
+                  <div key={x.tenant_id} onClick={() => router.push('/crm?tenant=' + x.tenant_id)}
+                    style={{ cursor: 'pointer', background: 'var(--greenbg)', border: '1px solid rgba(52,211,153,.35)', borderRadius: 14, padding: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                      <div className="t-main" style={{ fontSize: 15 }}>{x.tenant_name}</div>
+                      {x.building_obj?.market ? <span style={{ marginLeft: 'auto' }}><Pill cls="p-green">{x.building_obj.market}</Pill></span> : null}
+                    </div>
+                    <div className="t-sub" style={{ marginTop: 4 }}>
+                      {x.building_name}{x.size_sqm ? ' · ' + Math.round(x.size_sqm).toLocaleString() + ' m²' : ''} · exp {dfmt(x.expiry_date)}
+                    </div>
+                    {x.tenant_obj?.verified_note ? <div style={{ marginTop: 8, fontSize: 12.5, color: 'var(--ink)', lineHeight: 1.5 }}>{x.tenant_obj.verified_note}</div> : null}
+                    <div style={{ marginTop: 8, fontSize: 11, color: 'var(--green)', fontWeight: 700 }}>✓ No public sign of a done deal</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* HERO — today's calls */}
         <div className="card" style={{ borderColor: 'rgba(227,210,164,.4)' }}>
