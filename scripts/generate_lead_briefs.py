@@ -227,7 +227,7 @@ def main():
     # leases with embedded building + tenant — paginate past the 1000-row API cap
     sel = ("id,tenant_id,size_sqm,rent_per_annum,expiry_date,has_renewal_option,"
            "levels,suite,building:buildings(name,street_address,market),"
-           "tenant:tenants(id,legal_name,industry,business_summary,relationship)")
+           "tenant:tenants(id,legal_name,industry,business_summary,relationship,prospect_status)")
     rows, _start, _step = [], 0, 1000
     while True:
         chunk = (sb.table("leases").select(sel).not_.is_("tenant_id", "null")
@@ -242,6 +242,8 @@ def main():
     best = {}
     for r in rows:
         t = r.get("tenant") or {}
+        if (t.get("prospect_status") or "") in ("moved", "done"):
+            continue  # already signed/relocated — don't brief
         rel = (t.get("relationship") or "").strip().lower()
         if rel in SKIP_RELATIONSHIPS:
             continue

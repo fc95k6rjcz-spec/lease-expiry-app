@@ -89,6 +89,21 @@ export default function TenantDrawer({ account, onClose, onOpenLease, onChanged 
           {rel ? <button className="chip" style={{ border: '1px solid var(--line)' }} onClick={() => updateTenant({ relationship: null })}>Untrack</button> : null}
         </div>
 
+        {['moved', 'done'].includes(td.prospect_status) ? (
+          <div style={{ marginBottom: 12, padding: '9px 11px', background: 'var(--redbg)', border: '1px solid rgba(248,113,113,.35)', borderRadius: 8, fontSize: 12.5 }}>
+            ⊘ <b>Suppressed from leads</b> — {td.prospect_status === 'moved' ? 'moved / signed elsewhere' : 'deal done'}.
+            {td.prospect_note ? <div className="t-sub" style={{ marginTop: 2 }}>{td.prospect_note}</div> : null}
+            <div style={{ marginTop: 6 }}>
+              <button className="chip" style={{ border: '1px solid var(--line)' }} onClick={() => updateTenant({ prospect_status: null, prospect_note: null })}>Restore to active</button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ marginBottom: 12 }}>
+            <button className="btn" onClick={() => updateTenant({ prospect_status: 'moved', prospect_note: 'Marked moved/done ' + today() })}>⊘ Mark as moved / already done</button>
+            <span className="t-sub" style={{ marginLeft: 8 }}>drops them from Today’s calls &amp; AI briefs</span>
+          </div>
+        )}
+
         {tracked && (
           <>
             <div className="sec-t">Pipeline</div>

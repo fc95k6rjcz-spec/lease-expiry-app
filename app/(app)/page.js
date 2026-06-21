@@ -71,6 +71,7 @@ export default function Dashboard() {
     const best = {};
     rows.forEach((x) => {
       if (!x.tenant_id) return;
+      if (['moved', 'done'].includes(x.tenant_obj?.prospect_status)) return; // already signed/relocated — don't pitch
       const mte = x.months_to_expiry;
       const b = benchmark(x, bm);
       const ctx = {
