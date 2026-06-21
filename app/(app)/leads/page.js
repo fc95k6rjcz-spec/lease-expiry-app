@@ -23,6 +23,7 @@ export default function LeadsPage() {
   const [mode, setMode] = useState('sme');
   const [market, setMarket] = useState('all');
   const [industry, setIndustry] = useState('all');
+  const [nicheOnly, setNicheOnly] = useState(true);
   const router = useRouter();
 
   const vac = useMemo(() => Object.fromEntries(marketStats.map((m) => [m.market, m.vacancy_pct])), [marketStats]);
@@ -43,19 +44,20 @@ export default function LeadsPage() {
     const keep = (x) => { const c = best[x.tenant_id]; if (!c || mte(x) < mte(c)) best[x.tenant_id] = x; };
     rows.forEach((x) => {
       if (!live(x)) return;
+      if (nicheOnly && !x.tenant_obj?.niche_category) return;
       const m = x.months_to_expiry, mkt = x.building_obj?.market;
       if (mode === 'sme') {
         if (mkt && mkt !== 'Sydney CBD' && (x.size_sqm == null || x.size_sqm <= 1500) && m != null && m >= 0 && m <= 18) keep(x);
       } else if (mode === 'growing') {
         if (expSig.has(x.tenant_id) && m != null && m >= 0 && m <= 30) keep(x);
       } else if (mode === 'niche') {
-        if ((market === 'all' || mkt === market) && (industry === 'all' || x.tenant_obj?.industry === industry) && m != null && m >= 0 && m <= 24) keep(x);
+        if ((market === 'all' || mkt === market) && (industry === 'all' || x.tenant_obj?.niche_category === industry) && m != null && m >= 0 && m <= 24) keep(x);
       } else if (mode === 'early') {
         if (mkt && mkt !== 'Sydney CBD' && m != null && m >= 18 && m <= 36) keep(x);
       }
     });
     return Object.values(best).sort((a, b) => mte(a) - mte(b)).slice(0, 50);
-  }, [rows, mode, market, industry, expSig]);
+  }, [rows, mode, market, industry, expSig, nicheOnly]);
 
   const cur = MODES.find((m) => m.id === mode);
 
@@ -67,6 +69,9 @@ export default function LeadsPage() {
           {MODES.map((m) => (
             <button key={m.id} className={'btn' + (mode === m.id ? ' primary' : '')} onClick={() => setMode(m.id)}>{m.label}</button>
           ))}
+          <button className={'btn' + (nicheOnly ? ' primary' : '')} onClick={() => setNicheOnly((v) => !v)} style={{ marginLeft: 'auto' }} title="tech / finance / media / health-tech only">
+            {nicheOnly ? '✓ My verticals' : 'My verticals'}
+          </button>
         </div>
         <div className="banner info">{cur.hint}</div>
 
@@ -76,7 +81,11 @@ export default function LeadsPage() {
               {markets.map((m) => <option key={m} value={m}>{m === 'all' ? 'All markets' : m}</option>)}
             </select>
             <select value={industry} onChange={(e) => setIndustry(e.target.value)}>
-              {industries.map((i) => <option key={i} value={i}>{i === 'all' ? 'All industries' : i}</option>)}
+              <option value="all">All my verticals</option>
+              <option>Tech / AI / Fintech</option>
+              <option>Finance / Trading / PE</option>
+              <option>Health Tech</option>
+              <option>Media / Advertising</option>
             </select>
           </div>
         )}
@@ -90,7 +99,7 @@ export default function LeadsPage() {
                   const v = vacOf(x.building_obj?.market, vac);
                   return (
                     <tr key={x.tenant_id} onClick={() => router.push('/crm?tenant=' + x.tenant_id)}>
-                      <td className="t-main">{x.tenant_name}</td>
+                      <td className="t-main">{x.tenant_name}{x.tenant_obj?.niche_category ? <div className="t-sub">{x.tenant_obj.niche_category}</div> : null}</td>
                       <td>{x.building_obj?.market || '—'}{v != null ? <span className="t-sub"> · {Number(v).toFixed(0)}% vac</span> : null}</td>
                       <td className="t-sub">{x.building_name}</td>
                       <td className="num">{x.size_sqm ? Math.round(x.size_sqm).toLocaleString() : '—'}</td>
