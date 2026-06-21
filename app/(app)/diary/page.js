@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Topbar } from '../../../components/Shell';
 import { Loading, Pill } from '../../../components/ui';
@@ -57,8 +58,11 @@ export default function DiaryPage() {
   const [adding, setAdding] = useState(false);
 
   useEffect(() => {
-    const p = new URLSearchParams(window.location.search).get('year');
-    if (p) { setYear(+p); setExp('any'); setSmart(false); }
+    const sp = new URLSearchParams(window.location.search);
+    const y = sp.get('year');
+    if (y) { setYear(+y); setExp('any'); setSmart(false); }
+    const b = sp.get('b');
+    if (b) setBf(b);
   }, []);
 
   const filtered = useMemo(() => {
@@ -149,7 +153,9 @@ export default function DiaryPage() {
                     return (
                       <tr key={x.id} onClick={() => setSel(x)}>
                         <td><div className="t-main">{x.tenant_name}</div></td>
-                        <td>{x.building_name}</td>
+                        <td onClick={(e) => e.stopPropagation()}>
+                          <Link href={'/stack?b=' + encodeURIComponent(x.building_name)} title="Open this building's stack plan">{x.building_name}</Link>
+                        </td>
                         <td>{x.levels || ''}{x.suite ? <div className="t-sub">{x.suite}</div> : null}</td>
                         <td className="num">{x.size_sqm ? Math.round(x.size_sqm).toLocaleString() : '—'}</td>
                         <td className="num">{money0(rentOf(x))}</td>

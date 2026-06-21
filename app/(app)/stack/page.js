@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Topbar } from '../../../components/Shell';
 import { Loading } from '../../../components/ui';
@@ -73,6 +74,7 @@ export default function StackPage() {
             {summaries.map((b) => <option key={b.name} value={b.name}>{b.address && b.address !== b.name ? b.address : ''}</option>)}
           </datalist>
           {meta ? <span className="count">{meta.leases} tenancies · {fmt(Math.round(meta.area))} m² · {meta.levels} levels{meta.address ? ' · ' + meta.address : ''}</span> : null}
+          {name ? <Link href={'/diary?b=' + encodeURIComponent(name)} className="btn" style={{ marginLeft: 'auto' }}>View in Lease Diary →</Link> : null}
         </div>
         <div className="legend">
           <span><i style={{ background: 'var(--redbg)', border: '1px solid rgba(248,113,113,.35)' }} />Expired</span>
