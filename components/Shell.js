@@ -9,6 +9,7 @@ import { Loading } from './ui';
 const NAV = [
   { items: [{ href: '/', label: 'Dashboard', ic: '▦' }] },
   { title: 'Prospect', items: [
+    { href: '/occupiers', label: 'Occupiers', ic: '◉', gold: true },
     { href: '/leads', label: 'Lead Finder', ic: '⌖', gold: true },
     { href: '/opportunities', label: 'Opportunities', ic: '★' },
     { href: '/targets', label: 'Targets', ic: '◎', gold: true },
