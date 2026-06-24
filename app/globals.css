@@ -42,7 +42,10 @@ button{font-family:inherit}
 .authlex .lexmark{font-size:58px;letter-spacing:13px}
 .authlex .lexsub{font-size:13px;letter-spacing:5px}
 .authlex .lextag{font-size:10px;letter-spacing:2px;margin-top:6px}
-.nav{display:flex;flex-direction:column;gap:2px;margin-top:8px;position:relative}
+.nav{display:flex;flex-direction:column;gap:2px;margin-top:8px;position:relative;
+  flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:#212a37 transparent}
+.nav::-webkit-scrollbar{width:7px}
+.nav::-webkit-scrollbar-thumb{background:#212a37;border-radius:4px}
 .nav a{display:flex;align-items:center;gap:11px;color:#9aa7bd;padding:10px 12px;border-radius:10px;
   font-size:13.5px;font-weight:500;transition:.12s}
 .nav a:hover{background:#141c28;color:#eaf1fb}
