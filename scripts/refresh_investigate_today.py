@@ -140,9 +140,9 @@ def main():
         if b.get("market"):
             o["markets"].add(b["market"])
         m = months_to(x.get("expiry_date"), today)
-        if m is not None and m >= 0 and (o["next"] is None or m < o["next"]):
+        if m is not None and m >= 3 and (o["next"] is None or m < o["next"]):   # >=3mo: real runway, skips holdovers
             o["next"] = m
-            o["next_b"] = b.get("name")
+            o["next_b"] = b.get("name") or b.get("market") or "—"
             o["next_exp"] = x.get("expiry_date")
             o["next_market"] = b.get("market")
 
@@ -150,6 +150,8 @@ def main():
     for o in occ.values():
         m = o["next"]
         if m is None:
+            continue
+        if o["area"] >= 6000:           # very large footprint = almost certainly already represented
             continue
         early, late = lead_time(o["area"])
         phase = "deciding" if m <= late else "live" if m <= early else "watching"
