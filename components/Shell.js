@@ -23,6 +23,7 @@ const NAV = [
   ] },
   { title: 'Intel', items: [
     { href: '/signals', label: 'Signals', ic: '◆', gold: true },
+    { href: '/feed', label: 'Market Feed', ic: '◈', gold: true },
     { href: '/evidence', label: 'Deal Evidence', ic: '◰', gold: true },
     { href: '/market', label: 'Office Markets', ic: '◴', gold: true },
     { href: '/calculator', label: 'Deal Calculator', ic: '∑' },
