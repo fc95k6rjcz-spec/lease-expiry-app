@@ -1,9 +1,26 @@
 import './globals.css';
 import { AuthProvider } from '../lib/auth';
+import RegisterSW from '../components/RegisterSW';
 
 export const metadata = {
   title: 'LEX — Lease Expiry',
-  description: 'Lease expiry diary, tenant CRM, stack plans and expansion signals.',
+  description: 'Occupier lead intelligence + on-site data scanner.',
+  manifest: '/manifest.webmanifest',
+  applicationName: 'LEX',
+  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'LEX' },
+  icons: {
+    icon: '/icon-192.png',
+    apple: '/apple-touch-icon.png',
+  },
+  formatDetection: { telephone: false },
+};
+
+export const viewport = {
+  themeColor: '#06080c',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({ children }) {
@@ -17,6 +34,7 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body>
+        <RegisterSW />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

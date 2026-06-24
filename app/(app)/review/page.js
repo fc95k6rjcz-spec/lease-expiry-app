@@ -50,7 +50,7 @@ export default function ReviewPage() {
         if (error) throw error;
         tenantId = data.id;
       }
-      const { error: le } = await supabase.from('leases').insert({ building_id: buildingId, tenant_id: tenantId, levels: val(p, 'floor') || null, suite: val(p, 'suite') || null, status: 'Active' });
+      const { error: le } = await supabase.from('leases').insert({ building_id: buildingId, tenant_id: tenantId, levels: val(p, 'floor') || null, suite: val(p, 'suite') || null, size_sqm: val(p, 'size_sqm') || null, expiry_date: val(p, 'expiry_date') || null, status: 'Active' });
       if (le) throw le;
       await supabase.from('pending_occupiers').update({
         status: 'approved', reviewed_at: new Date().toISOString(), reviewed_by: user?.email || null,
@@ -97,6 +97,8 @@ export default function ReviewPage() {
                     <label className="t-sub">Suite<input value={val(p, 'suite')} onChange={(e) => setVal(p.id, 'suite', e.target.value)} disabled={!editable} style={{ width: '100%' }} /></label>
                     <label className="t-sub">Building<input value={val(p, 'building_name')} onChange={(e) => setVal(p.id, 'building_name', e.target.value)} disabled={!editable} style={{ width: '100%' }} /></label>
                     <label className="t-sub">Market<input value={val(p, 'market')} onChange={(e) => setVal(p.id, 'market', e.target.value)} disabled={!editable} style={{ width: '100%' }} /></label>
+                    <label className="t-sub">Size (m²)<input value={val(p, 'size_sqm')} onChange={(e) => setVal(p.id, 'size_sqm', e.target.value)} disabled={!editable} style={{ width: '100%' }} /></label>
+                    <label className="t-sub">Expiry<input type="date" value={val(p, 'expiry_date')} onChange={(e) => setVal(p.id, 'expiry_date', e.target.value)} disabled={!editable} style={{ width: '100%' }} /></label>
                   </div>
                   {p.notes ? <div className="t-sub" style={{ marginTop: 6 }}>{p.notes}</div> : null}
                   {p.status === 'pending' ? (

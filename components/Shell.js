@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth, signOut } from '../lib/auth';
 import { displayName } from '../lib/personal';
 import { Loading } from './ui';
@@ -32,10 +32,13 @@ export default function Shell({ children }) {
   const { user, loading, isConfigured } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const [menu, setMenu] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) router.replace('/login');
   }, [loading, user, router]);
+
+  useEffect(() => { setMenu(false); }, [pathname]);
 
   if (!isConfigured) {
     return (
@@ -55,7 +58,12 @@ export default function Shell({ children }) {
   if (!user) return <Loading />;
 
   return (
-    <div className="app">
+    <div className={'app' + (menu ? ' menu-open' : '')}>
+      <div className="mtop">
+        <button className="hamb" onClick={() => setMenu((v) => !v)} aria-label="Menu">☰</button>
+        <div className="mtop-mark">LEX</div>
+      </div>
+      <div className="scrim" onClick={() => setMenu(false)} />
       <aside className="side">
         <div className="logo" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 0 }}>
           <div className="lexmark">LEX</div>
