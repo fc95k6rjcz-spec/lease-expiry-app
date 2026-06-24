@@ -30,6 +30,8 @@ const NAV = [
   ] },
   { title: 'Data', items: [
     { href: '/research', label: 'Bulk Research', ic: '⌕' },
+    { href: '/capture', label: 'Scan Board', ic: '◳', gold: true },
+    { href: '/review', label: 'Review Queue', ic: '☑', gold: true },
     { href: '/buildings', label: 'Buildings', ic: '▣' },
     { href: '/import', label: 'Import / Export', ic: '⇅' },
   ] },

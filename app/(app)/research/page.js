@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Topbar } from '../../../components/Shell';
 import { Loading, Pill } from '../../../components/ui';
 import { useLeases } from '../../../lib/data';
+import { supabase } from '../../../lib/supabase';
 import { fmt, toCSV, downloadCSV } from '../../../lib/format';
 import { normName } from '../../../lib/sources';
 
@@ -77,6 +78,14 @@ export default function ResearchPage() {
     const u = (results || []).filter((r) => !r.found).map((r) => r.input).join('\n');
     if (navigator.clipboard) navigator.clipboard.writeText(u);
   };
+  async function sendUnknowns() {
+    const u = (results || []).filter((r) => !r.found);
+    if (!u.length) return;
+    const pending = u.map((r) => ({ source: 'Company website', confidence: 0.4, status: 'pending', tenant_name: r.input, notes: 'From bulk research — verify Sydney office & address.' }));
+    const { error } = await supabase.from('pending_occupiers').insert(pending);
+    if (error) return alert(error.message);
+    alert(`${pending.length} sent to the Review queue for address verification.`);
+  }
 
   return (
     <>
@@ -95,6 +104,7 @@ export default function ResearchPage() {
             {results ? <span className="count">{foundN}/{results.length} already in LEX</span> : null}
             {results ? <button className="btn" onClick={exportCsv}>Export CSV</button> : null}
             {results && foundN < results.length ? <button className="btn" onClick={copyUnknowns}>Copy unknowns</button> : null}
+            {results && foundN < results.length ? <button className="btn" onClick={sendUnknowns}>Send {results.length - foundN} to research queue</button> : null}
           </div>
         </div></div>
 
