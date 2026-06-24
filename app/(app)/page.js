@@ -10,6 +10,7 @@ import { rentBenchmarks, benchmark, opportunityScore } from '../../lib/score';
 import { fragmentedTargets, multiSiteTargets } from '../../lib/targets';
 import { useAuth } from '../../lib/auth';
 import { displayName, timeGreeting, dailyLine } from '../../lib/personal';
+import { isSuppressed } from '../../lib/occupier';
 
 const whyOf = (bd) => {
   const interesting = bd.filter((f) => !['Size / commission', 'Contactable', 'Lease timing'].includes(f.label));
@@ -71,7 +72,7 @@ export default function Dashboard() {
     const best = {};
     rows.forEach((x) => {
       if (!x.tenant_id) return;
-      if (['moved', 'done'].includes(x.tenant_obj?.prospect_status)) return; // already signed/relocated — don't pitch
+      if (isSuppressed(x.tenant_obj)) return; // moved / represented / competitor / lost
       if (x.tenant_obj?.verified_at) return; // shown in the Verified panel above
       const mte = x.months_to_expiry;
       const b = benchmark(x, bm);
@@ -94,7 +95,7 @@ export default function Dashboard() {
     const best = {};
     rows.forEach((x) => {
       if (!x.tenant_id || !x.tenant_obj?.verified_at) return;
-      if (['moved', 'done'].includes(x.tenant_obj?.prospect_status)) return;
+      if (isSuppressed(x.tenant_obj)) return;
       const mte = x.months_to_expiry == null ? 1e9 : x.months_to_expiry;
       const cur = best[x.tenant_id];
       if (!cur || mte < (cur.months_to_expiry == null ? 1e9 : cur.months_to_expiry)) best[x.tenant_id] = x;

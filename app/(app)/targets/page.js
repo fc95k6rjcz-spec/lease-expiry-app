@@ -8,6 +8,7 @@ import { useLeases, tenantSummaries } from '../../../lib/data';
 import { fmt, dfmt } from '../../../lib/format';
 import { reasonsList, fragmentedTargets, multiSiteTargets, reasonPill } from '../../../lib/targets';
 import { reasonAngle } from '../../../lib/angles';
+import { isSuppressed } from '../../../lib/occupier';
 
 export default function TargetsPage() {
   const { rows, loading, reload } = useLeases();
@@ -22,6 +23,8 @@ export default function TargetsPage() {
   const reasons = useMemo(() => reasonsList(rows), [rows]);
   const fragmented = useMemo(() => fragmentedTargets(rows), [rows]);
   const multi = useMemo(() => multiSiteTargets(rows, ops), [rows, ops]);
+  const suppressedIds = useMemo(() => new Set(rows.filter((x) => isSuppressed(x.tenant_obj)).map((x) => x.tenant_id)), [rows]);
+  const bySupp = (a, b) => (suppressedIds.has(a.tenant_id) ? 1 : 0) - (suppressedIds.has(b.tenant_id) ? 1 : 0);
 
   const TABS = [['reasons', `Reasons to call (${reasons.length})`], ['consolidate', `Consolidation (${fragmented.length + multi.length})`]];
 
@@ -42,8 +45,8 @@ export default function TargetsPage() {
             <table>
               <thead><tr><th>Tenant</th><th>Building</th><th>Level</th><th className="num">m²</th><th>Reason to call</th><th>Expiry</th></tr></thead>
               <tbody>
-                {reasons.slice(0, 400).map((r) => (
-                  <tr key={r.id} onClick={() => openTenant(r.tenant_id)}>
+                {[...reasons].sort(bySupp).slice(0, 400).map((r) => (
+                  <tr key={r.id} onClick={() => openTenant(r.tenant_id)} style={suppressedIds.has(r.tenant_id) ? { opacity: 0.4 } : undefined}>
                     <td className="t-main">{r.tenant}</td>
                     <td>{r.building}</td>
                     <td>{r.levels || ''}</td>
@@ -68,8 +71,8 @@ export default function TargetsPage() {
               <div className="bd"><table>
                 <thead><tr><th>Tenant</th><th>Building</th><th>Suites</th><th>Levels held</th><th className="num">Total m²</th><th>Next expiry</th></tr></thead>
                 <tbody>
-                  {fragmented.slice(0, 100).map((z) => (
-                    <tr key={z.tenant_id + z.building} onClick={() => openTenant(z.tenant_id)}>
+                  {[...fragmented].sort(bySupp).slice(0, 100).map((z) => (
+                    <tr key={z.tenant_id + z.building} onClick={() => openTenant(z.tenant_id)} style={suppressedIds.has(z.tenant_id) ? { opacity: 0.4 } : undefined}>
                       <td className="t-main">{z.tenant}</td>
                       <td>{z.building}</td>
                       <td>{z.count}</td>
@@ -92,8 +95,8 @@ export default function TargetsPage() {
               <div className="bd"><table>
                 <thead><tr><th>Tenant</th><th className="num">Sites</th><th>Where</th><th className="num">Total m²</th><th>Next expiry</th></tr></thead>
                 <tbody>
-                  {multi.slice(0, 100).map((z) => (
-                    <tr key={z.tenant_id} onClick={() => openTenant(z.tenant_id)}>
+                  {[...multi].sort(bySupp).slice(0, 100).map((z) => (
+                    <tr key={z.tenant_id} onClick={() => openTenant(z.tenant_id)} style={suppressedIds.has(z.tenant_id) ? { opacity: 0.4 } : undefined}>
                       <td className="t-main">{z.tenant}</td>
                       <td className="num">{z.siteCount}</td>
                       <td className="t-sub">{z.buildingList.join(' · ')}</td>

@@ -5,6 +5,7 @@ import { Topbar } from '../../../components/Shell';
 import { Loading, Pill } from '../../../components/ui';
 import { useLeases, useTable } from '../../../lib/data';
 import { dfmt } from '../../../lib/format';
+import { isSuppressed } from '../../../lib/occupier';
 
 const MODES = [
   { id: 'sme', label: 'Unrepresented SMEs', hint: 'Small suburban/metro tenants self-managing their lease — too small for the big agencies, no incumbent adviser.' },
@@ -37,7 +38,7 @@ export default function LeadsPage() {
   const markets = useMemo(() => ['all', ...Array.from(new Set(rows.map((x) => x.building_obj?.market).filter(Boolean))).sort()], [rows]);
   const industries = useMemo(() => ['all', ...Array.from(new Set(rows.map((x) => x.tenant_obj?.industry).filter(Boolean))).sort()], [rows]);
 
-  const live = (x) => x.tenant_id && x.tenant_name && !['moved', 'done'].includes(x.tenant_obj?.prospect_status);
+  const live = (x) => x.tenant_id && x.tenant_name && !isSuppressed(x.tenant_obj);
 
   const list = useMemo(() => {
     const best = {};
