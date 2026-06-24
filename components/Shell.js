@@ -29,6 +29,7 @@ const NAV = [
     { href: '/metrics', label: 'Business Metrics', ic: '◵' },
   ] },
   { title: 'Data', items: [
+    { href: '/research', label: 'Bulk Research', ic: '⌕' },
     { href: '/buildings', label: 'Buildings', ic: '▣' },
     { href: '/import', label: 'Import / Export', ic: '⇅' },
   ] },
