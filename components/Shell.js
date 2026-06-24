@@ -7,35 +7,25 @@ import { displayName } from '../lib/personal';
 import { Loading } from './ui';
 
 const NAV = [
-  { items: [{ href: '/', label: 'Dashboard', ic: '▦' }] },
-  { title: 'Prospect', items: [
-    { href: '/occupiers', label: 'Occupiers', ic: '◉', gold: true },
-    { href: '/leads', label: 'Lead Finder', ic: '⌖', gold: true },
-    { href: '/opportunities', label: 'Opportunities', ic: '★' },
-    { href: '/targets', label: 'Targets', ic: '◎', gold: true },
+  { items: [
+    { href: '/', label: 'Dashboard', ic: '▦' },
+    { href: '/occupiers', label: 'Leads', ic: '◉', gold: true },
+    { href: '/feed', label: 'Market Feed', ic: '◈', gold: true },
+  ] },
+  { title: 'Reference', items: [
     { href: '/diary', label: 'Lease Diary', ic: '▤' },
     { href: '/stack', label: 'Stack Plans', ic: '▥' },
-  ] },
-  { title: 'Manage', items: [
     { href: '/crm', label: 'Tenants / CRM', ic: '◍' },
-    { href: '/pipeline', label: 'Pipeline', ic: '◫' },
-    { href: '/analytics', label: 'Analytics', ic: '◷' },
   ] },
-  { title: 'Intel', items: [
-    { href: '/signals', label: 'Signals', ic: '◆', gold: true },
-    { href: '/feed', label: 'Market Feed', ic: '◈', gold: true },
-    { href: '/evidence', label: 'Deal Evidence', ic: '◰', gold: true },
-    { href: '/market', label: 'Office Markets', ic: '◴', gold: true },
-    { href: '/calculator', label: 'Deal Calculator', ic: '∑' },
-    { href: '/metrics', label: 'Business Metrics', ic: '◵' },
-  ] },
-  { title: 'Data', items: [
-    { href: '/research', label: 'Bulk Research', ic: '⌕' },
+  { title: 'Capture', items: [
     { href: '/capture', label: 'Scan Board', ic: '◳', gold: true },
     { href: '/review', label: 'Review Queue', ic: '☑', gold: true },
-    { href: '/buildings', label: 'Buildings', ic: '▣' },
-    { href: '/import', label: 'Import / Export', ic: '⇅' },
+    { href: '/research', label: 'Bulk Research', ic: '⌕' },
   ] },
+  // Hidden from the menu but still live at their URLs — re-add a line to bring one back:
+  //   /leads (Lead Finder)  /opportunities  /targets  → consolidated into /occupiers ("Leads")
+  //   /signals  /market (Office Markets)  /evidence (Deal Evidence)
+  //   /pipeline  /analytics  /calculator  /metrics  /buildings  /import
 ];
 
 export default function Shell({ children }) {
