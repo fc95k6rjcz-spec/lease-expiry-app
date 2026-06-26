@@ -96,6 +96,25 @@ export default function Shell({ children }) {
         </div>
       </aside>
       <main className="main">{children}</main>
+
+      {/* Phone-first bottom tab bar — hidden on desktop via CSS. */}
+      <nav className="tabbar" aria-label="Primary">
+        <Link href="/" className={pathname === '/' ? 'on' : ''}>
+          <span className="tbic">▦</span><span>Home</span>
+        </Link>
+        <Link href="/occupiers" className={pathname === '/occupiers' ? 'on' : ''}>
+          <span className="tbic">◉</span><span>Leads</span>
+        </Link>
+        <Link href="/capture" className="tbscan" aria-label="Scan a board">
+          <span className="tbscan-ic">◳</span>
+        </Link>
+        <Link href="/feed" className={pathname === '/feed' ? 'on' : ''}>
+          <span className="tbic">◈</span><span>Feed</span>
+        </Link>
+        <button type="button" className={'tbmore' + (menu ? ' on' : '')} onClick={() => setMenu((v) => !v)}>
+          <span className="tbic">☰</span><span>More</span>
+        </button>
+      </nav>
     </div>
   );
 }
