@@ -20,6 +20,8 @@ export default function CapturePage() {
   const [busy, setBusy] = useState(false);
   const [found, setFound] = useState(null);   // extracted listings
   const [delta, setDelta] = useState(null);   // board reconciliation result
+  const [logging, setLogging] = useState(false);
+  const [logged, setLogged] = useState(false);
   const [err, setErr] = useState('');
   const router = useRouter();
 
@@ -32,12 +34,12 @@ export default function CapturePage() {
   function onFile(e) {
     const f = e.target.files?.[0];
     if (!f) return;
-    setFile(f); setPreview(URL.createObjectURL(f)); setFound(null); setDelta(null); setErr('');
+    setFile(f); setPreview(URL.createObjectURL(f)); setFound(null); setDelta(null); setLogged(false); setErr('');
   }
 
   async function scan() {
     if (!file) return;
-    setBusy(true); setErr(''); setFound(null); setDelta(null);
+    setBusy(true); setErr(''); setFound(null); setDelta(null); setLogged(false);
     try {
       const path = `${Date.now()}-${(file.name || 'scan').replace(/[^a-zA-Z0-9.]/g, '_')}`;
       const { error: upErr } = await supabase.storage.from('directory-photos').upload(path, file, { upsert: false });
@@ -76,14 +78,53 @@ export default function CapturePage() {
       if (mode === 'board' && bld?.id) {
         const { data: ex } = await supabase
           .from('leases')
-          .select('levels, tenant:tenants(legal_name)')
+          .select('levels, tenant:tenants(id, legal_name)')
           .eq('building_id', bld.id);
-        const existing = (ex || []).map((l) => ({ tenant_name: l.tenant?.legal_name, levels: l.levels }));
-        setDelta({ ...reconcileBoard(listings, existing), building: bld.name || bld.street_address, known: existing.length });
+        const existing = (ex || []).map((l) => ({ tenant_id: l.tenant?.id, tenant_name: l.tenant?.legal_name, levels: l.levels }));
+        setDelta({
+          ...reconcileBoard(listings, existing),
+          building: bld.name || bld.street_address,
+          known: existing.length,
+          imageUrl,
+        });
       }
     } catch (e) {
       setErr(e.message || String(e));
     } finally { setBusy(false); }
+  }
+
+  // Persist the board deltas as tenant signals: departures = possible vacancy,
+  // floor moves = possible expansion/contraction. Newcomers already go to the
+  // review queue as off-market occupiers, so they're not signalled here.
+  async function logSignals() {
+    if (!delta) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const b = delta.building || 'this building';
+    const rows = [];
+    for (const d of delta.departed) {
+      if (!d.id) continue;
+      rows.push({
+        tenant_id: d.id, signal_type: 'Relocation rumour', direction: 'Neutral', impact: 'Medium',
+        headline: `Off the ${b} board`,
+        detail: `${d.tenant} is no longer listed on the ${b} directory board${d.floor ? ` (was ${d.floor})` : ''}. Space may be coming available.`,
+        magnitude: d.floor || null, source: 'Directory board', source_url: delta.imageUrl || null, detected_date: today,
+      });
+    }
+    for (const m of delta.moved) {
+      if (!m.id) continue;
+      rows.push({
+        tenant_id: m.id, signal_type: 'Other', direction: 'Neutral', impact: 'Low',
+        headline: `Moved floors at ${b}`,
+        detail: `${m.tenant} moved ${m.from || '?'} → ${m.to || '?'} on the ${b} directory board.`,
+        magnitude: `${m.from || '?'} → ${m.to || '?'}`, source: 'Directory board', source_url: delta.imageUrl || null, detected_date: today,
+      });
+    }
+    if (!rows.length) return;
+    setLogging(true);
+    const { error } = await supabase.from('signals').insert(rows);
+    setLogging(false);
+    if (error) { setErr('Signal log failed: ' + error.message); return; }
+    setLogged(true);
   }
 
   return (
@@ -213,6 +254,21 @@ export default function CapturePage() {
                   ))}
                 </div>
               </div>
+            ) : null}
+
+            {(delta.departed.length + delta.moved.length) > 0 ? (
+              <button
+                className="btn primary block"
+                style={{ marginTop: 16 }}
+                disabled={logging || logged}
+                onClick={logSignals}
+              >
+                {logged
+                  ? '✓ Logged to Signals'
+                  : logging
+                    ? 'Logging…'
+                    : `Log ${delta.departed.length + delta.moved.length} signal${delta.departed.length + delta.moved.length === 1 ? '' : 's'}`}
+              </button>
             ) : null}
           </div></div>
         ) : null}

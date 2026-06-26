@@ -10,9 +10,10 @@ const SYS = `You are an expert Sydney commercial real estate leasing broker writ
 export async function POST(req) {
   let body = {};
   try { body = await req.json(); } catch {}
-  const { tenant, contact, signal, lease, building } = body || {};
-  const fallback = signal ? signalAngle(signal, lease || {}).opener
-    : 'There’s a timely reason to reach out — happy to walk you through the options on a quick call.';
+  const { tenant, contact, signal, lease, building, angle, examples } = body || {};
+  const fallback = (angle && String(angle).trim())
+    || (signal ? signalAngle(signal, lease || {}).opener
+      : 'There’s a timely reason to reach out — happy to walk you through the options on a quick call.');
 
   const key = process.env.GEMINI_API_KEY;
   if (!key) return Response.json({ opener: fallback, source: 'fallback' });
@@ -27,12 +28,21 @@ export async function POST(req) {
       else if (lease.expiryDate) lines.push(`Lease expires: ${lease.expiryDate}${lease.months != null ? ` (~${Math.round(lease.months)} months away)` : ''}`);
       if (lease.optionDue) lines.push('An option-to-renew decision is due soon.');
     }
+    // Ground the model on the deterministic angle so it never invents facts.
+    if (angle && String(angle).trim()) lines.push(`\nReference angle (rephrase in your own voice, keep the facts): ${angle}`);
+
+    // Voice few-shot: real openers the user previously sent/kept, so output
+    // matches how they actually write. Cap length to stay within budget.
+    const sys = (Array.isArray(examples) && examples.length)
+      ? SYS + `\n\nMatch the voice, length and tone of these openers the user has sent before:\n` +
+        examples.slice(0, 5).map((e, i) => `${i + 1}. ${String(e).slice(0, 300)}`).join('\n')
+      : SYS;
 
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${key}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        system_instruction: { parts: [{ text: SYS }] },
+        system_instruction: { parts: [{ text: sys }] },
         contents: [{ parts: [{ text: lines.join('\n') }] }],
         generationConfig: { temperature: 0.7, maxOutputTokens: 220 },
       }),

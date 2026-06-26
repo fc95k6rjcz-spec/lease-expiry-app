@@ -109,6 +109,7 @@ export default function SignalsPage() {
                       compact
                       aiPayload={{
                         tenant: tName[s.tenant_id],
+                        tenant_id: s.tenant_id,
                         signal: { signal_type: s.signal_type, direction: s.direction, headline: s.headline, magnitude: s.magnitude },
                         lease: tenantCtx[s.tenant_id] || {},
                       }}
