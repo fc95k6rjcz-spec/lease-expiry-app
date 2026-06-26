@@ -313,3 +313,18 @@ input::placeholder,textarea::placeholder{color:#5d6b82}
   /* 16px inputs stop iOS Safari from zooming the page on focus */
   input,select,textarea{font-size:16px}
 }
+
+/* ===== Install chooser (app vs browser) ===== */
+.installgate{
+  position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;
+  background:rgba(4,6,10,.93);backdrop-filter:blur(8px);
+  padding:24px;padding-bottom:max(24px,env(safe-area-inset-bottom))
+}
+.installcard{
+  width:100%;max-width:360px;background:#0b1018;border:1px solid var(--line);
+  border-radius:18px;padding:26px 22px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6)
+}
+.installcard .ig-sub{color:#c7d2e0;font-size:15px;margin:12px 0 20px}
+.installcard .ig-fine{color:#6b7a90;font-size:12px;margin:16px 0 0;line-height:1.5}
+.installcard .ig-steps{text-align:left;color:#c7d2e0;font-size:14px;line-height:1.75;margin:0 0 20px;padding-left:18px}
+.installcard .ig-steps b{color:#eaf1fb}

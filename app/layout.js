@@ -1,6 +1,7 @@
 import './globals.css';
 import { AuthProvider } from '../lib/auth';
 import RegisterSW from '../components/RegisterSW';
+import InstallChoice from '../components/InstallChoice';
 
 export const metadata = {
   title: 'LEX — Lease Expiry',
@@ -35,6 +36,7 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <RegisterSW />
+        <InstallChoice />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
