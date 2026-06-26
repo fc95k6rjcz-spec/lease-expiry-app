@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Topbar } from '../../../components/Shell';
 import { supabase } from '../../../lib/supabase';
 import { useTable } from '../../../lib/data';
+import { reconcileBoard } from '../../../lib/reconcile';
 
 const MODES = [
   { key: 'auto', label: 'Anything', hint: 'Board, list, schedule or a table on screen' },
@@ -18,6 +19,7 @@ export default function CapturePage() {
   const [preview, setPreview] = useState('');
   const [busy, setBusy] = useState(false);
   const [found, setFound] = useState(null);   // extracted listings
+  const [delta, setDelta] = useState(null);   // board reconciliation result
   const [err, setErr] = useState('');
   const router = useRouter();
 
@@ -30,12 +32,12 @@ export default function CapturePage() {
   function onFile(e) {
     const f = e.target.files?.[0];
     if (!f) return;
-    setFile(f); setPreview(URL.createObjectURL(f)); setFound(null); setErr('');
+    setFile(f); setPreview(URL.createObjectURL(f)); setFound(null); setDelta(null); setErr('');
   }
 
   async function scan() {
     if (!file) return;
-    setBusy(true); setErr(''); setFound(null);
+    setBusy(true); setErr(''); setFound(null); setDelta(null);
     try {
       const path = `${Date.now()}-${(file.name || 'scan').replace(/[^a-zA-Z0-9.]/g, '_')}`;
       const { error: upErr } = await supabase.storage.from('directory-photos').upload(path, file, { upsert: false });
@@ -68,6 +70,17 @@ export default function CapturePage() {
       const { error: insErr } = await supabase.from('pending_occupiers').insert(rows);
       if (insErr) throw new Error('Save failed: ' + insErr.message);
       setFound(rows);
+
+      // Delta engine — only a full lobby board can prove who has LEFT, so
+      // departure detection is board-mode + known-building only.
+      if (mode === 'board' && bld?.id) {
+        const { data: ex } = await supabase
+          .from('leases')
+          .select('levels, tenant:tenants(legal_name)')
+          .eq('building_id', bld.id);
+        const existing = (ex || []).map((l) => ({ tenant_name: l.tenant?.legal_name, levels: l.levels }));
+        setDelta({ ...reconcileBoard(listings, existing), building: bld.name || bld.street_address, known: existing.length });
+      }
     } catch (e) {
       setErr(e.message || String(e));
     } finally { setBusy(false); }
@@ -136,6 +149,71 @@ export default function CapturePage() {
               ))}
             </div>
             <div className="t-sub" style={{ marginTop: 10 }}>Sent to the review queue — approve there to make them official.</div>
+          </div></div>
+        ) : null}
+
+        {delta ? (
+          <div className="card"><div className="bd pad">
+            <b>What changed{delta.building ? ` · ${delta.building}` : ''}</b>
+            <div className="t-sub" style={{ marginTop: 2, marginBottom: 12 }}>
+              Reconciled against the {delta.known} occupier{delta.known === 1 ? '' : 's'} LEX already holds for this building.
+            </div>
+
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {[
+                ['New · off-market', delta.summary.newcomers, 'var(--green)'],
+                ['Gone · space may free up', delta.summary.departed, 'var(--amber)'],
+                ['Moved floor', delta.summary.moved, 'var(--ink)'],
+                ['Confirmed', delta.summary.matched, 'var(--muted)'],
+              ].map(([lab, n, c]) => (
+                <div key={lab} style={{ flex: '1 1 120px', border: '1px solid var(--line)', borderRadius: 10, padding: '10px 12px' }}>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: c }}>{n}</div>
+                  <div className="t-sub">{lab}</div>
+                </div>
+              ))}
+            </div>
+
+            {delta.newcomers.length ? (
+              <div style={{ marginTop: 14 }}>
+                <div className="t-sub" style={{ color: 'var(--green)', fontWeight: 600 }}>Off-market — not in your data yet:</div>
+                <div className="scanlist">
+                  {delta.newcomers.map((n, i) => (
+                    <div className="scanrow" key={i}>
+                      <span className="t-main">{n.tenant}</span>
+                      <span className="t-sub">{[n.floor, n.suite, n.size_sqm ? n.size_sqm + ' m²' : ''].filter(Boolean).join(' · ') || '—'}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {delta.departed.length ? (
+              <div style={{ marginTop: 14 }}>
+                <div className="t-sub" style={{ color: 'var(--amber)', fontWeight: 600 }}>No longer on the board — space likely coming available:</div>
+                <div className="scanlist">
+                  {delta.departed.map((n, i) => (
+                    <div className="scanrow" key={i}>
+                      <span className="t-main">{n.tenant}</span>
+                      <span className="t-sub">{n.floor || '—'}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {delta.moved.length ? (
+              <div style={{ marginTop: 14 }}>
+                <div className="t-sub" style={{ fontWeight: 600 }}>Moved floor — possible expansion or contraction:</div>
+                <div className="scanlist">
+                  {delta.moved.map((n, i) => (
+                    <div className="scanrow" key={i}>
+                      <span className="t-main">{n.tenant}</span>
+                      <span className="t-sub">{n.from || '?'} → {n.to || '?'}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div></div>
         ) : null}
       </div>

@@ -3,7 +3,7 @@ import { signalAngle } from '../../../lib/angles';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
 const SYS = `You are an expert Sydney commercial real estate leasing broker writing a short, warm, confident first-contact message to a tenant decision-maker (email or LinkedIn). Reference the specific trigger and their lease timing, and make a soft ask for a brief call. Australian English, conversational, no corporate jargon, no emojis, under 60 words. Output ONLY the message text — no greeting line like "Hi", no preamble, no sign-off.`;
 

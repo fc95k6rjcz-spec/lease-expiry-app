@@ -1,7 +1,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const MODEL = process.env.GEMINI_VISION_MODEL || process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+const MODEL = process.env.GEMINI_VISION_MODEL || process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
 // One general extractor. Works on a lobby directory board, a tenant list, a
 // rent roll / lease schedule, or a table on a screen — whatever has occupiers in it.
@@ -58,7 +58,7 @@ export async function POST(req) {
           error:
             `Gemini model "${MODEL}" was not found (404). It's likely retired or misspelled. ` +
             `Set GEMINI_VISION_MODEL (or GEMINI_MODEL) to a current model such as ` +
-            `"gemini-2.0-flash" or "gemini-2.5-flash" and redeploy.`,
+            `"gemini-2.5-flash" or "gemini-3.5-flash" and redeploy.`,
           model: MODEL,
           gemini: t.slice(0, 300),
         }, { status: 502 });
