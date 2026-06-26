@@ -50,7 +50,20 @@ export async function POST(req) {
     });
     if (!r.ok) {
       const t = await r.text().catch(() => '');
-      return Response.json({ error: `Gemini ${r.status} ${t.slice(0, 160)}` }, { status: 502 });
+      // A 404 here means the model name in the request path isn't valid for
+      // this API — almost always a stale GEMINI_VISION_MODEL / GEMINI_MODEL
+      // env var pointing at a retired model. Make that self-diagnosing.
+      if (r.status === 404) {
+        return Response.json({
+          error:
+            `Gemini model "${MODEL}" was not found (404). It's likely retired or misspelled. ` +
+            `Set GEMINI_VISION_MODEL (or GEMINI_MODEL) to a current model such as ` +
+            `"gemini-2.0-flash" or "gemini-2.5-flash" and redeploy.`,
+          model: MODEL,
+          gemini: t.slice(0, 300),
+        }, { status: 502 });
+      }
+      return Response.json({ error: `Gemini ${r.status} ${t.slice(0, 200)}`, model: MODEL }, { status: 502 });
     }
     const data = await r.json();
     const text = (data?.candidates?.[0]?.content?.parts || []).map((p) => p.text).join(' ').trim();
