@@ -73,7 +73,7 @@ export default function OccupiersPage() {
 
         <div className="card"><div className="bd">
           {loading ? <Loading /> : (
-            <table>
+            <table className="cardify">
               <thead><tr>
                 <th>Occupier</th><th className="num">Footprint</th><th>Markets</th>
                 <th>Next expiry</th><th>Read</th><th>The play</th><th>Status</th>
@@ -83,19 +83,19 @@ export default function OccupiersPage() {
                   const [pc, pl] = phaseLabel(o);
                   return (
                     <tr key={o.id} style={o.dismissed ? { opacity: 0.5 } : undefined}>
-                      <td>
+                      <td data-label="Occupier">
                         <div className="t-main" style={{ cursor: 'pointer' }} onClick={() => router.push('/crm?tenant=' + o.id)}>{o.name}</div>
                         {o.tenant_obj?.niche_category ? <div className="t-sub">{o.tenant_obj.niche_category}</div> : null}
                       </td>
-                      <td className="num">{fmt(o.area)} m²<div className="t-sub">{o.sites} {o.sites === 1 ? 'lease' : 'leases'} · {o.nLoc} bldg</div></td>
-                      <td className="t-sub">{o.markets.join(', ') || '—'}</td>
-                      <td>{o.next ? <>{dfmt(o.next.expiry_date)}<div className="t-sub" onClick={() => router.push('/stack?b=' + encodeURIComponent(o.next.building_name))} style={{ cursor: 'pointer', color: 'var(--brand)' }}>{o.next.building_name}</div></> : '—'}</td>
-                      <td><Pill cls={pc}>{pl}</Pill></td>
-                      <td style={{ maxWidth: 320 }}>
+                      <td className="num" data-label="Footprint">{fmt(o.area)} m²<div className="t-sub">{o.sites} {o.sites === 1 ? 'lease' : 'leases'} · {o.nLoc} bldg</div></td>
+                      <td className="t-sub" data-label="Markets">{o.markets.join(', ') || '—'}</td>
+                      <td data-label="Next expiry">{o.next ? <>{dfmt(o.next.expiry_date)}<div className="t-sub" onClick={() => router.push('/stack?b=' + encodeURIComponent(o.next.building_name))} style={{ cursor: 'pointer', color: 'var(--brand)' }}>{o.next.building_name}</div></> : '—'}</td>
+                      <td data-label="Read"><Pill cls={pc}>{pl}</Pill></td>
+                      <td className="cardcol" style={{ maxWidth: 320 }} data-label="The play">
                         <Pill cls={o.archetype === 'Multi-market' ? 'p-green' : 'p-slate'}>{o.archetype}</Pill>
                         <div className="t-sub" style={{ marginTop: 4 }}>{o.thesis}</div>
                       </td>
-                      <td onClick={(e) => e.stopPropagation()}>
+                      <td data-label="Status" onClick={(e) => e.stopPropagation()}>
                         <select value={o.status || ''} onChange={(e) => setStatus(o.id, e.target.value)} style={{ fontSize: 12 }}>
                           <option value="">— set —</option>
                           {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}

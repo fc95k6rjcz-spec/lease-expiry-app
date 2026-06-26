@@ -328,3 +328,33 @@ input::placeholder,textarea::placeholder{color:#5d6b82}
 .installcard .ig-fine{color:#6b7a90;font-size:12px;margin:16px 0 0;line-height:1.5}
 .installcard .ig-steps{text-align:left;color:#c7d2e0;font-size:14px;line-height:1.75;margin:0 0 20px;padding-left:18px}
 .installcard .ig-steps b{color:#eaf1fb}
+
+/* ===== Cardify: turn tagged tables into stacked cards on phones ===== */
+@media(max-width:680px){
+  table.cardify,table.cardify tbody{display:block;width:100%;overflow:visible;white-space:normal}
+  table.cardify thead{display:none}
+  table.cardify tr{
+    display:block;background:#0b1018;border:1px solid var(--line);border-radius:12px;
+    padding:12px 14px;margin-bottom:10px
+  }
+  table.cardify td{
+    display:flex;justify-content:space-between;gap:14px;align-items:baseline;
+    padding:5px 0;border:0;text-align:right;white-space:normal
+  }
+  table.cardify td::before{
+    content:attr(data-label);color:var(--muted);font-size:12px;font-weight:600;
+    text-align:left;flex:0 0 auto;white-space:nowrap
+  }
+  /* first cell becomes the card title */
+  table.cardify td:first-child{padding:0 0 6px;margin-bottom:6px;border-bottom:1px solid var(--line)}
+  table.cardify td:first-child::before{display:none}
+  table.cardify td:first-child .t-main{font-size:16px;font-weight:600}
+  /* cells whose value is long/blocky stack under their label */
+  table.cardify td.cardcol{flex-direction:column;align-items:stretch;text-align:left}
+  table.cardify td.cardcol::before{margin-bottom:4px}
+  table.cardify td .t-sub{font-weight:400}
+  /* empty-state row spans full width, centered */
+  table.cardify td.empty{display:block;text-align:center}
+  table.cardify td.empty::before{display:none}
+  table.cardify td select{flex:0 0 auto}
+}

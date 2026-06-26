@@ -139,7 +139,7 @@ export default function DiaryPage() {
         <div className="card">
           <div className="bd">
             {loading ? <Loading /> : (
-              <table>
+              <table className="cardify">
                 <thead>
                   <tr>
                     {COLS.map((c) => (
@@ -152,16 +152,16 @@ export default function DiaryPage() {
                     const [c, l] = expClass(x.months_to_expiry);
                     return (
                       <tr key={x.id} onClick={() => setSel(x)}>
-                        <td><div className="t-main">{x.tenant_name}</div></td>
-                        <td onClick={(e) => e.stopPropagation()}>
+                        <td data-label="Tenant"><div className="t-main">{x.tenant_name}</div></td>
+                        <td data-label="Building" onClick={(e) => e.stopPropagation()}>
                           <Link href={'/stack?b=' + encodeURIComponent(x.building_name)} title="Open this building's stack plan">{x.building_name}</Link>
                         </td>
-                        <td>{x.levels || ''}{x.suite ? <div className="t-sub">{x.suite}</div> : null}</td>
-                        <td className="num">{x.size_sqm ? Math.round(x.size_sqm).toLocaleString() : '—'}</td>
-                        <td className="num">{money0(rentOf(x))}</td>
-                        <td>{dfmt(x.next_review_date)}</td>
-                        <td>{dfmt(x.expiry_date)}</td>
-                        <td><Pill cls={c}>{l}</Pill></td>
+                        <td data-label="Level / Suite">{x.levels || ''}{x.suite ? <span className="t-sub">{x.suite}</span> : null}</td>
+                        <td className="num" data-label="m²">{x.size_sqm ? Math.round(x.size_sqm).toLocaleString() : '—'}</td>
+                        <td className="num" data-label="Rent p.a.">{money0(rentOf(x))}</td>
+                        <td data-label="Next review">{dfmt(x.next_review_date)}</td>
+                        <td data-label="Expiry">{dfmt(x.expiry_date)}</td>
+                        <td data-label="To expiry"><Pill cls={c}>{l}</Pill></td>
                       </tr>
                     );
                   })}
