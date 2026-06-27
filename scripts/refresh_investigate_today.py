@@ -104,7 +104,7 @@ def ollama_line(facts):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--limit", type=int, default=6)
+    ap.add_argument("--limit", type=int, default=30)
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
 

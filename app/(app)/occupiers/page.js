@@ -7,7 +7,7 @@ import { Loading, Pill } from '../../../components/ui';
 import { supabase } from '../../../lib/supabase';
 import { useLeases } from '../../../lib/data';
 import { dfmt, fmt } from '../../../lib/format';
-import { occupiers, phaseLabel, STATUSES } from '../../../lib/occupier';
+import { occupiers, phaseLabel, STATUSES, DISMISSED } from '../../../lib/occupier';
 
 const ARCHES = ['All', 'Multi-market', 'Multi-site', 'Staggered leases', 'Single site'];
 const READS = [['all', 'Any timing'], ['deciding', 'Deciding now'], ['live', 'Window open'], ['portfolio', 'Portfolio plays']];
@@ -96,8 +96,16 @@ export default function OccupiersPage() {
                         <div className="t-sub" style={{ marginTop: 4 }}>{o.thesis}</div>
                       </td>
                       <td data-label="Status" onClick={(e) => e.stopPropagation()}>
-                        <select value={o.status || ''} onChange={(e) => setStatus(o.id, e.target.value)} style={{ fontSize: 12 }}>
-                          <option value="">— set —</option>
+                        <div className="triage">
+                          <button className={'tu' + (o.status === 'Active Target' ? ' on' : '')} title="Pursue → Active Target"
+                            onClick={() => setStatus(o.id, o.status === 'Active Target' ? '' : 'Active Target')}>👍</button>
+                          <button className={'tw' + (o.status === 'Watching' ? ' on' : '')} title="Watch"
+                            onClick={() => setStatus(o.id, o.status === 'Watching' ? '' : 'Watching')}>❓</button>
+                          <button className={'td' + (DISMISSED.includes(o.status) ? ' on' : '')} title="Not for me → dismiss"
+                            onClick={() => setStatus(o.id, 'Not a Fit')}>👎</button>
+                        </div>
+                        <select value={o.status || ''} onChange={(e) => setStatus(o.id, e.target.value)} style={{ fontSize: 11, marginTop: 6 }}>
+                          <option value="">— or set —</option>
                           {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
                         </select>
                       </td>
