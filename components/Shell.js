@@ -5,10 +5,12 @@ import { useEffect, useState } from 'react';
 import { useAuth, signOut } from '../lib/auth';
 import { displayName } from '../lib/personal';
 import { Loading } from './ui';
+import AskLex from './AskLex';
 
 const NAV = [
   { items: [
     { href: '/', label: 'Dashboard', ic: '▦' },
+    { href: '/ask', label: 'Ask LEX', ic: '✦', gold: true },
     { href: '/occupiers', label: 'Leads', ic: '◉', gold: true },
     { href: '/feed', label: 'Market Feed', ic: '◈', gold: true },
   ] },
@@ -33,6 +35,7 @@ export default function Shell({ children }) {
   const pathname = usePathname();
   const router = useRouter();
   const [menu, setMenu] = useState(false);
+  const [ask, setAsk] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) router.replace('/login');
@@ -115,6 +118,20 @@ export default function Shell({ children }) {
           <span className="tbic">☰</span><span>More</span>
         </button>
       </nav>
+
+      {/* Floating Ask LEX launcher — available on every screen */}
+      <button className="asklex-fab" onClick={() => setAsk(true)} aria-label="Ask LEX">✦</button>
+      {ask ? (
+        <div className="asklex-overlay" onClick={() => setAsk(false)}>
+          <div className="asklex-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="asklex-sheethd">
+              <b>Ask LEX</b>
+              <button className="hamb" onClick={() => setAsk(false)} aria-label="Close">✕</button>
+            </div>
+            <AskLex />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
