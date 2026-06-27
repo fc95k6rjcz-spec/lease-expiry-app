@@ -15,6 +15,7 @@ const NAV = [
     { href: '/feed', label: 'Market Feed', ic: '◈', gold: true },
   ] },
   { title: 'Reference', items: [
+    { href: '/money', label: 'Pipeline $', ic: '$', gold: true },
     { href: '/diary', label: 'Lease Diary', ic: '▤' },
     { href: '/stack', label: 'Stack Plans', ic: '▥' },
     { href: '/crm', label: 'Tenants / CRM', ic: '◍' },
