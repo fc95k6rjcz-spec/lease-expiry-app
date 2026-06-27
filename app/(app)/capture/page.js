@@ -81,12 +81,21 @@ export default function CapturePage() {
           .select('levels, tenant:tenants(id, legal_name)')
           .eq('building_id', bld.id);
         const existing = (ex || []).map((l) => ({ tenant_id: l.tenant?.id, tenant_name: l.tenant?.legal_name, levels: l.levels }));
-        setDelta({
-          ...reconcileBoard(listings, existing),
-          building: bld.name || bld.street_address,
-          known: existing.length,
-          imageUrl,
-        });
+        const rec = reconcileBoard(listings, existing);
+        setDelta({ ...rec, building: bld.name || bld.street_address, known: existing.length, imageUrl });
+
+        // Vacancy time-machine: store this scan as a timestamped snapshot so we
+        // can track occupancy and churn over time. Fire-and-forget — never block.
+        supabase.from('board_scans').insert({
+          building_id: bld.id,
+          building_name: bld.name || bld.street_address || null,
+          occupier_count: listings.length,
+          roster: listings.map((l) => ({ tenant: l.tenant, floor: l.floor || '' })),
+          new_count: rec.summary.newcomers,
+          gone_count: rec.summary.departed,
+          moved_count: rec.summary.moved,
+          image_url: imageUrl,
+        }).then(() => {}, () => {});
       }
     } catch (e) {
       setErr(e.message || String(e));
