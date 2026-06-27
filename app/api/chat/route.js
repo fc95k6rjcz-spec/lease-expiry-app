@@ -1,7 +1,11 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+// Chat gets its own model knob (independent of the cheaper OCR/opener default)
+// so we can run the smartest model here. gemini-3.5-flash is the current stable
+// flagship and wins on grounded + agent/tool-call work, which is what this does.
+// Flip GEMINI_CHAT_MODEL to gemini-3.1-pro-preview for max research-grade reasoning.
+const MODEL = process.env.GEMINI_CHAT_MODEL || 'gemini-3.5-flash';
 
 const STATUSES = 'Active Target | Watching | Already Represented | Already Renewed | Already Relocated | Not a Fit | Do Not Contact | Lost Opportunity';
 
@@ -47,7 +51,7 @@ export async function POST(req) {
       body: JSON.stringify({
         system_instruction: { parts: [{ text: sys }] },
         contents,
-        generationConfig: { temperature: 0.4, maxOutputTokens: 900 },
+        generationConfig: { temperature: 0.4, maxOutputTokens: 1400 },
       }),
     });
     if (!r.ok) {
