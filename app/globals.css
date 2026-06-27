@@ -568,6 +568,10 @@ input::placeholder,textarea::placeholder{color:#5d6b82}
 .asklex-msg.assistant .asklex-bubble{background:#0e131b;border:1px solid var(--line);color:#dbe4f0}
 .asklex-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .asklex-actions .btn{font-size:12px;padding:6px 11px;color:#e3d2a4;border-color:rgba(227,210,164,.4)}
+.asklex-bar{display:flex;gap:8px;padding:8px 12px 0}
+.asklex-bar .btn{font-size:12px;padding:6px 10px}
+.asklex-mic{flex:0 0 auto;padding:0 12px;font-size:16px}
+.asklex-mic.on{color:#e2706a;border-color:#e2706a}
 .asklex-input{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
 .asklex-input textarea{flex:1;resize:none;background:#0e131b;border:1px solid var(--line);border-radius:10px;
   padding:10px 12px;color:#eaf1fb;font-size:14px;line-height:1.4}

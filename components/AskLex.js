@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
 import { useLeases, useTable } from '../lib/data';
 import { buildLeadContext } from '../lib/context';
+import VoiceCapture from './VoiceCapture';
 
 const STARTERS = [
   'Who should I call this week?',
@@ -45,7 +46,11 @@ export default function AskLex() {
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [actState, setActState] = useState({}); // `${mi}-${ai}` -> 'busy'|'done'|'err'
+  const [speakOn, setSpeakOn] = useState(false);
+  const [capturing, setCapturing] = useState(false);
+  const [listening, setListening] = useState(false);
   const endRef = useRef(null);
+  const recog = useRef(null);
 
   const ctx = useMemo(
     () => buildLeadContext({ leases, signals, contacts, interactions, tenants }),
@@ -74,9 +79,29 @@ export default function AskLex() {
       if (j.error) { setMsgs((m) => [...m, { role: 'assistant', text: '⚠️ ' + j.error }]); return; }
       const { text, actions } = splitActions(j.reply);
       setMsgs((m) => [...m, { role: 'assistant', text, actions }]);
+      if (speakOn && text && typeof window !== 'undefined' && window.speechSynthesis) {
+        try { window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance(text)); } catch (_) {}
+      }
     } catch (e) {
       setMsgs((m) => [...m, { role: 'assistant', text: '⚠️ ' + (e.message || 'Request failed') }]);
     } finally { setBusy(false); }
+  }
+
+  function toggleMic() {
+    const SR = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
+    if (!SR) {
+      setMsgs((m) => [...m, { role: 'assistant', text: 'Live voice typing isn’t available in this browser. Tap the 🎤 on your iPhone keyboard to talk into the box instead.' }]);
+      return;
+    }
+    if (listening) { try { recog.current?.stop(); } catch (_) {} setListening(false); return; }
+    try {
+      const r = new SR();
+      r.lang = 'en-AU'; r.interimResults = false; r.maxAlternatives = 1;
+      r.onresult = (e) => { const t = e.results[0][0].transcript; setInput((v) => (v ? v + ' ' : '') + t); };
+      r.onend = () => setListening(false);
+      r.onerror = () => setListening(false);
+      recog.current = r; r.start(); setListening(true);
+    } catch (_) { setListening(false); }
   }
 
   async function runAction(mi, ai, a) {
@@ -143,7 +168,14 @@ export default function AskLex() {
         <div ref={endRef} />
       </div>
 
+      <div className="asklex-bar">
+        <button className="btn" onClick={() => setCapturing(true)}>🎙 Capture call</button>
+        <button className="btn" onClick={() => { setSpeakOn((v) => !v); if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel(); }}>
+          {speakOn ? '🔊 Voice on' : '🔇 Voice off'}
+        </button>
+      </div>
       <div className="asklex-input">
+        <button className={'btn asklex-mic' + (listening ? ' on' : '')} onClick={toggleMic} aria-label="Voice input">{listening ? '●' : '🎤'}</button>
         <textarea
           rows={1} value={input} placeholder="Ask about a tenant, a market, who to call…"
           onChange={(e) => setInput(e.target.value)}
@@ -151,6 +183,8 @@ export default function AskLex() {
         />
         <button className="btn primary" onClick={() => send()} disabled={busy || !input.trim()}>Send</button>
       </div>
+
+      {capturing ? <VoiceCapture tenants={tenants} onClose={() => setCapturing(false)} onSaved={() => {}} /> : null}
     </div>
   );
 }
