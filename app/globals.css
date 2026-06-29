@@ -248,7 +248,8 @@ input::placeholder,textarea::placeholder{color:#5d6b82}
   font-weight:600;font-size:15px;transition:.12s}
 .bigcam:hover{border-color:var(--brand);color:#fff;background:#0e1622}
 .bigcam-ic{font-size:34px;line-height:1;color:var(--brand)}
-.scanprev{margin-top:12px;width:100%;border-radius:12px;border:1px solid var(--line)}
+.scanprev{margin-top:12px;width:100%;max-height:40vh;object-fit:contain;border-radius:12px;border:1px solid var(--line);background:#0b1018}
+.scanbtn{margin-top:12px;padding:16px;font-size:17px;font-weight:800;border-radius:14px}
 .scanlist{display:flex;flex-direction:column;gap:1px;border-radius:10px;overflow:hidden}
 .scanrow{display:flex;flex-direction:column;gap:1px;padding:9px 11px;background:var(--soft)}
 .scanrow:nth-child(even){background:var(--soft2)}

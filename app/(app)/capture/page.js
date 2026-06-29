@@ -176,7 +176,7 @@ export default function CapturePage() {
           {preview ? <img src={preview} alt="scan" className="scanprev" /> : null}
 
           {file ? (
-            <button className="btn primary block" onClick={scan} disabled={busy} style={{ marginTop: 12 }}>
+            <button className="btn primary block scanbtn" onClick={scan} disabled={busy}>
               {busy ? 'Reading…' : 'Read this'}
             </button>
           ) : null}
