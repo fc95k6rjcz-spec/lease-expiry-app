@@ -22,6 +22,7 @@ const NAV = [
   ] },
   { title: 'Capture', items: [
     { href: '/capture', label: 'Scan Board', ic: '◳', gold: true },
+    { href: '/card', label: 'Meeting Capture', ic: '◲', gold: true },
     { href: '/patrol', label: 'Building Patrol', ic: '◴', gold: true },
     { href: '/import-lease', label: 'Lease PDF', ic: '▤', gold: true },
     { href: '/review', label: 'Review Queue', ic: '☑', gold: true },
